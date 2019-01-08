@@ -4,11 +4,12 @@ from random import randint
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
-#output_pins = (8, 10, 12, 14, 16)
-output_pins = (8,)
-#input_pins = (29, 31, 33, 35, 37)
-input_pins = (18,)
+output_pins = (8, 10, 12, 16, 18)
+#output_pins = (8,)
+input_pins = (29, 31, 33, 35, 37)
+#input_pins = (18,)
 for pin in output_pins:
+    print("output_pin: {}".format(pin))
     GPIO.setup(pin, GPIO.OUT, initial=GPIO.LOW)
 for pin in input_pins:
     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -89,10 +90,11 @@ def main():
     count = 0
     while True:
         count = (count + 1) % 10
-        input_state = GPIO.input(18)
-        print("({})input_state: {}".format(count, input_state))
+        input_states = [GPIO.input(pin) for pin in input_pins]
+        print("({})input_states: {}".format(count, input_states))
         sleep(.2)
-        if input_state == False:
+        """
+        if input_state == True:
             flash_all()
             dummy_scale_output()
             GPIO.output(8, GPIO.HIGH)
@@ -100,5 +102,6 @@ def main():
         else:
             GPIO.output(8, GPIO.LOW)
             sleep(.2)
+        """
 
 main()
