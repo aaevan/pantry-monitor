@@ -16,8 +16,15 @@ def read_scale(hid_num=0):
                 ordered_bytes = ''.join([byte_vals[index] for index in ordering])
                 bytes_to_int = int('0x' + ordered_bytes, 0)
                 #print([(i, chr(byte)) for i, byte in enumerate(raw_bytes)])
-                print("raw_bytes[5:8] : {}".format(raw_bytes[5:8]))
-                print(raw_bytes, raw_bytes[-4:], "|", byte_vals, "|", ordered_bytes, "|", bytes_to_int)
+                is_grams = 'bff' not in str(raw_bytes[5:8])
+                if is_grams:
+                    output_text = '{} grams'.format(bytes_to_int)
+                else:
+                    bytes_to_int /= 10
+                    pounds, ounces = bytes_to_int // 16, round(bytes_to_int % 16, 2)
+                    output_text = '{} lb. {} oz.'.format(int(pounds), ounces)
+                #print(raw_bytes, raw_bytes[-4:], "|", byte_vals, "|", ordered_bytes, "|", bytes_to_int, unit)
+                print(raw_bytes, output_text)
         finally:
             scale.close()
 
