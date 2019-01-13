@@ -102,6 +102,13 @@ def main():
                 sleep(2)
             if staple_choice is not None and measurement_repeats >= 4 and scale_value != (0.0, 'g'):
                 flash_all(n=5)
+                #TODO: figure out a way to log the last values of each staple.
+                # once every 10 minutes, check whether the last line in the log file has changed, if so, 
+                # write a new line with the updated gram values
+                # determine the average rate of change for the last many values (logged every day at noon?)
+                # and determine roughly when the staple will run out.
+                # TODO: account for tare values in the logged measurements.
+                # TODO: fire off the most recent measures to a push notification.
                 print("Whoa! we just measured {}g of {}. Logging that.".format(scale_value, staple_choice))
                 staple_choice = None
                 set_all_low()
