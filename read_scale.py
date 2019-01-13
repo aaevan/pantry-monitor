@@ -49,13 +49,13 @@ def read_scale(hid_num=0, debug=False):
         #print("Scale not connected or powered on.")
         return None, None
 
-def oz_to_g(oz=10, places=1):
+def oz_to_g(oz=10, places=0):
     """
     converts ounces to grams
     """
     return round(oz * 28.3495, places)
 
-def g_to_oz(g=283.5, places=2):
+def g_to_oz(g=283.5, places=1):
     """
     converts ounces to grams
     """
@@ -75,8 +75,10 @@ def easy_measure(output_unit='g', tries=5):
         return None
     if scale_unit == 'oz' and output_unit == 'g':
         return oz_to_g(measurement), 'g'
-    if scale_unit == 'g' and output_unit == 'oz':
+    elif scale_unit == 'g' and output_unit == 'oz':
         return g_to_oz(measurement), 'oz'
+    else:
+        return measurement, output_unit
 
 def main():
     while True:
