@@ -82,9 +82,6 @@ def main():
     while True:
         sleep(.5)
         print(easy_measure())
-        #try:
-            #print(read_scale())
-        #except OSError: #handle error for connection loss during read_scale() execution
-            #print("Connection Lost")
 
-main()
+if __name__ == "__main__":
+    main()
