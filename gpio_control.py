@@ -1,10 +1,15 @@
-import RPi.GPIO as GPIO
-from time import sleep
+import ast
+from itertools import cycle
 from random import randint, random
 from read_scale import *
-from itertools import cycle
+import RPi.GPIO as GPIO
+from time import sleep
 
-staples = ('black beans', 'brown rice', 'flour', 'kosher salt', 'MSG')
+log_filename = 'staple_log.txt'
+current_working_directory = os.getcwd()
+
+#the values speficied here will be written as the starting values of each staple.
+staples = {'black beans':1000.0, 'brown rice':999.0, 'flour':800.0, 'kosher salt'500.0, 'MSG':300.0}
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
@@ -18,9 +23,6 @@ for pin in output_pins:
     GPIO.setup(pin, GPIO.OUT, initial=GPIO.LOW)
 for pin in input_pins:
     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
-#GPIO.setup(8, GPIO.OUT, initial=GPIO.LOW)
-#GPIO.setup(18, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 def dummy_scale_output():
     """
@@ -110,6 +112,18 @@ def main():
                 # TODO: account for tare values in the logged measurements.
                 # TODO: fire off the most recent measures to a push notification.
                 print("Whoa! we just measured {}g of {}. Logging that.".format(scale_value, staple_choice))
+                log_path = "{}/{}".format(current_working_directory, log_filename)
+                print("log_path:{}".format(log_path))
+                if not os.path.exists(log_path)
+                    with open(log_path, 'x') as log:
+                        log.write(staples + "\n")
+                log_contents = []
+                with open(log_path, 'r') as log:
+                    for line in log:
+                        log_contents.append(log.read())
+                last_line = log_contents[-1]
+                with open(log_path, write_char) as log:
+
                 staple_choice = None
                 set_all_low()
                 measurement_repeats = 0
