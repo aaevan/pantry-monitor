@@ -8,8 +8,10 @@ from time import sleep
 log_filename = 'staple_log.txt'
 current_working_directory = os.getcwd()
 
-#the values speficied here will be written as the starting values of each staple.
-staples = {'black beans':1000.0, 'brown rice':999.0, 'flour':800.0, 'kosher salt'500.0, 'MSG':300.0}
+#the values specified here will be written as the starting values of each staple:
+staples = {'black beans':1000.0, 'brown rice':999.0, 'flour':800.0, 'kosher salt':500.0, 'MSG':300.0}
+#weigh out each of the containers to be used for each staple and enter the gram amounts here:
+tares =   {'black beans':100.0, 'brown rice':110.0, 'flour':120.0, 'kosher salt':104.0, 'MSG':80.0}
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
@@ -49,6 +51,36 @@ def flash_all(rate=.1, n=3):
         sleep(rate)
         set_all_low()
         sleep(rate)
+
+def logging_routine(scale_value=None):
+    #TODO: figure out a way to log the last values of each staple.
+    # once every 10 minutes, check whether the last line in the log file has changed, if so, 
+    # write a new line with the updated gram values
+    # determine the average rate of change for the last many values (logged every day at noon?)
+    # and determine roughly when the staple will run out.
+    # TODO: account for tare values in the logged measurements.
+    # TODO: fire off the most recent measures to a push notification.
+    if scale_value is None:
+        return False
+    print("Measured {}g of {}. Logging that.".format(scale_value[0], staple_choice))
+    log_path = "{}/{}".format(current_working_directory, log_filename)
+    print("log_path:{}".format(log_path))
+    #initialize the log if it doesn't already exist:
+    if not os.path.exists(log_path):
+        with open(log_path, 'x') as log:
+            log.write(staples + "\n")
+    #get the current contents of the log:
+    log_contents = []
+    with open(log_path, 'r') as log:
+        for line in log:
+            #convert the literal dict string of the line into a dict
+            log_line = ast.literal_eval(strip(log.read())) 
+            log_contents.append(log_line)
+    last_line = log_contents[-1]
+    #write the most recent values to the log (TODO: along with the current date)
+    staples[staple_choice] = scale_value[0]
+    with open(log_path, write_char) as log:
+        log.write(staples + '\n')
 
 def main():
     """
@@ -104,32 +136,13 @@ def main():
                 sleep(2)
             if staple_choice is not None and measurement_repeats >= 4 and scale_value != (0.0, 'g'):
                 flash_all(n=5)
-                #TODO: figure out a way to log the last values of each staple.
-                # once every 10 minutes, check whether the last line in the log file has changed, if so, 
-                # write a new line with the updated gram values
-                # determine the average rate of change for the last many values (logged every day at noon?)
-                # and determine roughly when the staple will run out.
-                # TODO: account for tare values in the logged measurements.
-                # TODO: fire off the most recent measures to a push notification.
-                print("Whoa! we just measured {}g of {}. Logging that.".format(scale_value, staple_choice))
-                log_path = "{}/{}".format(current_working_directory, log_filename)
-                print("log_path:{}".format(log_path))
-                if not os.path.exists(log_path)
-                    with open(log_path, 'x') as log:
-                        log.write(staples + "\n")
-                log_contents = []
-                with open(log_path, 'r') as log:
-                    for line in log:
-                        log_contents.append(log.read())
-                last_line = log_contents[-1]
-                with open(log_path, write_char) as log:
-
+                #write to the log file:
+                logging_routine(scale_value=scale_value)
+                #clear out old values:
                 staple_choice = None
                 set_all_low()
                 measurement_repeats = 0
                 choice_timeout = 0
-                
-
     except KeyboardInterrupt:
         print("\nSetting all pins low. Exiting.")
         set_all_low()
