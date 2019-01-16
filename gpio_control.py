@@ -15,8 +15,6 @@ index_to_staple = {0:'black beans', 1:'brown rice', 2:'flour', 3:'kosher salt', 
 #weigh out each of the containers to be used for each staple and enter the gram amounts here:
 tares =   {'black beans':100.0, 'brown rice':110.0, 'flour':120.0, 'kosher salt':104.0, 'MSG':80.0}
 
-print(index_to_staple)
-
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 output_pins = (8, 10, 12, 16, 18)
@@ -54,9 +52,9 @@ def logging_routine(scale_value=None, staple_choice=None):
     # TODO: fire off the most recent measures to a push notification.
     if scale_value is None or staple_choice is None:
         return False
-    print("Measured {}g of {}. Logging that.".format(scale_value[0], staple_choice))
+    #print("Measured {}g of {}. Logging that.".format(scale_value[0], staple_choice))
     log_path = "{}/{}".format(current_working_directory, log_filename)
-    print("log_path:{}".format(log_path))
+    #print("log_path:{}".format(log_path))
     #initialize the log if it doesn't already exist:
     if not os.path.exists(log_path):
         with open(log_path, 'x') as log:
@@ -66,7 +64,7 @@ def logging_routine(scale_value=None, staple_choice=None):
     with open(log_path, 'r') as log:
         for line in log:
             line_text = log.read()
-            print(line_text)
+            #print(line_text)
             log_contents.append(line_text)
     last_line = log_contents[-1]
     #write the most recent values to the log (TODO: along with the current date)
@@ -105,7 +103,7 @@ def main():
             if scale_value is not None:
                 #print a big debug string:
                 output_string = "count:{}|input_states:{}|scale_value:{}|choice_timeout:{}|staple_choice:{}, measurement_repeats:{}"
-                print(output_string.format(count, input_states, scale_value, choice_timeout, staple_choice, measurement_repeats))
+                #print(output_string.format(count, input_states, scale_value, choice_timeout, staple_choice, measurement_repeats))
                 set_all_low()
                 #if a switch is pressed, get ready for measurement of a particular staple:
                 if 0 in input_states:
@@ -115,7 +113,7 @@ def main():
                     measurement_repeats = 0
                 else:
                     if choice_pin is not None and choice_timeout > 0:
-                        print(choice_pin)
+                        #print(choice_pin)
                         #blink the selected pin:
                         GPIO.output(choice_pin, next(flipper))
                     else:
@@ -127,7 +125,7 @@ def main():
                         choice_pin = None
                         staple_choice = None
             else:
-                print("Scale off.")
+                #print("Scale off.")
                 staple_choice = None
                 set_all_low()
                 sleep(2)
@@ -141,7 +139,7 @@ def main():
                 measurement_repeats = 0
                 choice_timeout = 0
     except KeyboardInterrupt:
-        print("\nSetting all pins low. Exiting.")
+        #print("\nSetting all pins low. Exiting.")
         set_all_low()
 
 main()

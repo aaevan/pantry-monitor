@@ -42,7 +42,7 @@ def read_scale(hid_num=0, debug=False):
                     pounds, ounces = bytes_to_int // 16, round(bytes_to_int % 16, 2)
                     if debug:
                         output_text = '{}{} lb. {} oz.'.format(sign, int(pounds), ounces)
-                        print(output_text)
+                        #print(output_text)
                 #return either total grams or total ounces:
                 return bytes_to_int, unit
     else:
@@ -70,7 +70,7 @@ def easy_measure(output_unit='g', tries=5):
             if None not in (measurement, scale_unit):
                 break
         except OSError: #handle error for connection loss during read_scale() execution
-            print("Connection Lost")
+            #print("Connection Lost")
     else:
         return None
     if scale_unit == 'oz' and output_unit == 'g':
