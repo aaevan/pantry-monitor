@@ -70,6 +70,7 @@ def easy_measure(output_unit='g', tries=5):
             if None not in (measurement, scale_unit):
                 break
         except OSError: #handle error for connection loss during read_scale() execution
+            pass
             #print("Connection Lost")
     else:
         return None

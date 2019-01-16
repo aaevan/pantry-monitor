@@ -1,16 +1,19 @@
 import ast
-from datetime import date
+from datetime import datetime
 from itertools import cycle
 from random import randint, random
 from read_scale import *
 import RPi.GPIO as GPIO
 from time import sleep
 
+current_date = datetime.today().strftime('%c') #%c is already formats our date and time nicely
+print("started script on {}.".format(current_date))
+
 log_filename = 'staple_log.txt'
 current_working_directory = os.getcwd()
 
 #the values specified here will be written as the starting values of each staple:
-staples = {'black beans':1000.0, 'brown rice':999.0, 'flour':800.0, 'kosher salt':500.0, 'MSG':300.0}
+log_data = {'black beans':1000.0, 'brown rice':999.0, 'flour':800.0, 'kosher salt':500.0, 'MSG':300.0, 'date':current_date}
 index_to_staple = {0:'black beans', 1:'brown rice', 2:'flour', 3:'kosher salt', 4:'MSG'}
 #weigh out each of the containers to be used for each staple and enter the gram amounts here:
 tares =   {'black beans':100.0, 'brown rice':110.0, 'flour':120.0, 'kosher salt':104.0, 'MSG':80.0}
@@ -58,7 +61,7 @@ def logging_routine(scale_value=None, staple_choice=None):
     #initialize the log if it doesn't already exist:
     if not os.path.exists(log_path):
         with open(log_path, 'x') as log:
-            log.write(str(staples) + "\n")
+            log.write(str(log_data) + "\n")
     #get the current contents of the log:
     log_contents = []
     with open(log_path, 'r') as log:
@@ -68,9 +71,9 @@ def logging_routine(scale_value=None, staple_choice=None):
             log_contents.append(line_text)
     last_line = log_contents[-1]
     #write the most recent values to the log (TODO: along with the current date)
-    staples[staple_choice] = scale_value[0]
+    log_data[staple_choice] = scale_value[0]
     with open(log_path, 'a') as log:
-        log.write(str(staples) + '\n')
+        log.write(str(log_data) + '\n')
 
 def main():
     """
