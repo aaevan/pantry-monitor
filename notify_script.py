@@ -41,9 +41,18 @@ def generate_report_text(input_line=None):
         return "No input given!"
 
 #TODO: parse our %c formatted datetime and see a rate of change?
+def diff_time_between_lines(line_a=None, line_b=None, fmt='%a'):
+    time_a = line_a[date]
+    time_b = line_b[date]
+    time_diff = datetime.strptime(time_a, fmt) - datetime.strptime(time_b, fmt)
+    return time_diff
 
 parsed_log = parse_log(log_filename)
-notification_text = "the last line in the log: {}".format(parsed_log[-1])
+#notification_text = "the last line in the log: {}".format(parsed_log[-1])
+line_a = parsed_log[-1]
+line_b = parsed_log[-2]
+notification_text = "{}".format(diff_time_betwen_lines(line_a=line_a, 
+                                                       line_b=line_b))
 
 notify.send(notification_text)
 
