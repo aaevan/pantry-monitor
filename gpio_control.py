@@ -106,7 +106,7 @@ def main():
             if scale_value is not None:
                 #print a big debug string:
                 output_string = "count:{}|input_states:{}|scale_value:{}|choice_timeout:{}|staple_choice:{}, measurement_repeats:{}"
-                #print(output_string.format(count, input_states, scale_value, choice_timeout, staple_choice, measurement_repeats))
+                print(output_string.format(count, input_states, scale_value, choice_timeout, staple_choice, measurement_repeats))
                 set_all_low()
                 #if a switch is pressed, get ready for measurement of a particular staple:
                 if 0 in input_states:

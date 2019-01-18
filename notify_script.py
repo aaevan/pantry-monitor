@@ -1,4 +1,5 @@
 import ast
+from datetime import datetime
 import os
 from notify_run import Notify
 
@@ -34,31 +35,40 @@ def parse_log(filename=log_filename):
     return parsed_content
 
 def days_of_stock_remaining(grams_per_day=1600, current_stock=4000, tare_weight=708):
-    return (measured_weight - tare_weight) / grams_per_day
+    days_remain = round((current_stock - tare_weight) / grams_per_day, 1)
+    return  days_remain
+
+#TODO: parse our %c formatted datetime and see a rate of change?
+def diff_time_between_lines(line_a=None, line_b=None, fmt='%c'):
+    time_a = line_a['date']
+    time_b = line_b['date']
+    time_diff = datetime.strptime(time_a, fmt) - datetime.strptime(time_b, fmt)
+    return time_diff
 
 def generate_report_text(input_line=None):
     if input_line is None:
         return "No input given!"
+    stocks = {}
+    for key in input_line:
+        print('key is: {}'.format(key))
+        if key == 'date':
+            continue
+        grams_per_day = usage_rates[key]
+        current_stock = input_line[key]
+        tare_weight = tare_values[key]
+        stocks[key] = days_of_stock_remaining(grams_per_day=grams_per_day,
+                                              current_stock=current_stock,
+                                              tare_weight=tare_weight)
+    print(stocks)
+    return stocks
 
-#TODO: parse our %c formatted datetime and see a rate of change?
-def diff_time_between_lines(line_a=None, line_b=None, fmt='%a'):
-    time_a = line_a[date]
-    time_b = line_b[date]
-    time_diff = datetime.strptime(time_a, fmt) - datetime.strptime(time_b, fmt)
-    return time_diff
+def notify_routine():
+    parsed_log = parse_log(log_filename)
+    notification_text = generate_report_text(input_line=parsed_log[-1])
+    notify.send(notification_text)
 
-parsed_log = parse_log(log_filename)
-#notification_text = "the last line in the log: {}".format(parsed_log[-1])
-line_a = parsed_log[-1]
-line_b = parsed_log[-2]
-notification_text = "{}".format(diff_time_betwen_lines(line_a=line_a, 
-                                                       line_b=line_b))
+def main():
+    notify_routine()
 
-notify.send(notification_text)
-
-#the script itself will be scheduled as a cron job
-
-#every day at noon
-#duplicate the most recent pantry value
-
-
+if __name__ == '__main__':
+    main()
