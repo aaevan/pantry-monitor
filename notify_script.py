@@ -59,6 +59,8 @@ def generate_report_text(input_line=None):
         stocks[key] = days_of_stock_remaining(grams_per_day=grams_per_day,
                                               current_stock=current_stock,
                                               tare_weight=tare_weight)
+        #print(''.join(["{}: {} days\n".format(key, asdf[key]) for key in asdf]))
+        
     print(stocks)
     return stocks
 
