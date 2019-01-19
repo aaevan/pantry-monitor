@@ -67,12 +67,12 @@ def usage_between_lines(line_a=None, line_b=None):
 
 def filtered_within_n_days(parsed_log=None, days=14):
     _seconds_in_day = 60 * 60 * 24
-    within_interval = days * _seconds_in_day
-    current_time = datetime.now()
+    seconds_within_interval = days * _seconds_in_day
+    current_time = {'date':datetime.now().strftime('%c')}
     relevant_lines = []
     for line in parsed_log:
         seconds_since_logged = seconds_between_lines(line_dict_a=line, line_dict_b=current_time) 
-        if seconds_sinced_logged < seconds_in_interval:
+        if seconds_since_logged < seconds_within_interval:
             relevant_lines.append(line)
     return relevant_lines
 
@@ -95,27 +95,27 @@ def tally_usage_within_interval(parsed_log=None, within_n_days=14):
 def generate_report_text(parsed_log=None):
     if parsed_log is None:
         return "No input given!"
-    #stocks = {}
-    #for key in input_line:
-    #   print('key is: {}'.format(key))
-    #   if key == 'date':
-    #       continue
-    #   grams_per_day = usage_rates[key]
-    #   current_stock = input_line[key]
-    #   tare_weight = tare_values[key]
-        #stocks[key] = days_of_stock_remaining(grams_per_day=grams_per_day,
-                                              #current_stock=current_stock,
-                                              #tare_weight=tare_weight)
-        #print(''.join(["{}: {} days\n".format(key, asdf[key]) for key in asdf]))
     stocks = tally_usage_within_interval(parsed_log=parsed_log)
-        
-    print(stocks)
     return stocks
+
+def legible_usage_stats(usage_dict=None):
+    if usage_dict is None:
+        return False
+    output_string = ""
+    for key in sorted(usage_dict):
+        #if key == sorted(usage_dict)[-1]:
+            #output_string += ' and'
+        output_string += '\n{}g of {}'.format(round(usage_dict[key]), key)
+    #output_string += '.'
+    output_text = "2 week usage:{}".format(output_string)
+    print(output_text)
+    return output_text
 
 def notify_routine():
     parsed_log = parse_log(log_filename)
-    notification_text = generate_report_text(parsed_log=parsed_log)
-    notify.send(notification_text)
+    staples_dict = generate_report_text(parsed_log=parsed_log)
+    used_staples = {pair[0]:pair[1] for pair in staples_dict.items() if pair[1] != 0}
+    notify.send(legible_usage_stats(usage_dict=used_staples))
 
 def main():
     notify_routine()
