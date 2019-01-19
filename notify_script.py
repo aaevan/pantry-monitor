@@ -39,11 +39,60 @@ def days_of_stock_remaining(grams_per_day=1600, current_stock=4000, tare_weight=
     return  days_remain
 
 #TODO: parse our %c formatted datetime and see a rate of change?
-def diff_time_between_lines(line_a=None, line_b=None, fmt='%c'):
-    time_a = line_a['date']
-    time_b = line_b['date']
-    time_diff = datetime.strptime(time_a, fmt) - datetime.strptime(time_b, fmt)
+def seconds_between_lines(line_dict_a=None, line_dict_b=None, fmt='%c'):
+    time_a = datetime.strptime(line_dict_a['date'], fmt)
+    time_b = datetime.strptime(line_dict_b['date'], fmt)
+    time_diff = (time_b - time_a).total_seconds()
     return time_diff
+
+def usage_between_lines(line_a=None, line_b=None):
+    """
+    determines the amount of stock used between each
+    """
+    if line_a is None or line_b is None:
+        return False
+    staple_diffs = {}
+    for staple in sorted(line_a):
+        if staple == 'date':
+            continue
+        staple_usage = line_b[staple] - line_a[staple]
+        staple_diffs[staple] = staple_usage
+    return staple_diffs
+
+#track average drops-in-stock to a fixed interval (2 to 4 weeks?)
+#find the total stock used in a fixed interval (dates newer than 1 month)
+#full report:
+#At your current average rate of <USAGE_RATE>g per day, <NUM_DAYS> days of <STAPLE> remain.
+
+#I want a report to be sent AFTER each time I update any particular stock 
+#AND I want another report to be sent once a day at noon.
+
+def filtered_within_n_days(parsed_log=None, days=14):
+    _seconds_in_day = 60 * 60 * 24
+    within_interval = within_n_days * _seconds_in_day
+    current_time = dateime.now()
+    relevant_lines = []
+    for line in parsed_log:
+        seconds_since_logged = seconds_between_lines(line_dict_a=line, line_dict_b=current_time) 
+        if seconds_sinced_logged < seconds_in_interval:
+            relevant_lines.append(line)
+    return relevant_lines
+
+def tally_usage_within_interval(parsed_log=None, within_n_days=14):
+    #scan through log, discard invalid lines:
+    relevant_lines = filtered_within_n_days(parsed_log=parsed_log, days=within_n_days)
+    line_index_pairs = [(i, i + 1) for i in range(len(relevant_lines) - 1)]
+    usage_vals = []
+    for index_pair in line_index_pairs:
+        line_a = relevant_lines[index_pair[0]]
+        line_b = relevant_lines[index_pair[1]]
+        staple_use = usage_between_lines(line_a=line_a, line_b=line_b)
+        usage_vals.append(staple_use)
+    totals = {key:0 for key in relevant_lines[0] if key != 'date'}
+    for line in usage_vals:
+        for key in line:
+            totals[key] += line[key]
+    return totals
 
 def generate_report_text(input_line=None):
     if input_line is None:
@@ -56,6 +105,7 @@ def generate_report_text(input_line=None):
         grams_per_day = usage_rates[key]
         current_stock = input_line[key]
         tare_weight = tare_values[key]
+
         stocks[key] = days_of_stock_remaining(grams_per_day=grams_per_day,
                                               current_stock=current_stock,
                                               tare_weight=tare_weight)
