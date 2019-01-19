@@ -59,8 +59,6 @@ def usage_between_lines(line_a=None, line_b=None):
         staple_diffs[staple] = staple_usage
     return staple_diffs
 
-#track average drops-in-stock to a fixed interval (2 to 4 weeks?)
-#find the total stock used in a fixed interval (dates newer than 1 month)
 #full report:
 #At your current average rate of <USAGE_RATE>g per day, <NUM_DAYS> days of <STAPLE> remain.
 
@@ -69,8 +67,8 @@ def usage_between_lines(line_a=None, line_b=None):
 
 def filtered_within_n_days(parsed_log=None, days=14):
     _seconds_in_day = 60 * 60 * 24
-    within_interval = within_n_days * _seconds_in_day
-    current_time = dateime.now()
+    within_interval = days * _seconds_in_day
+    current_time = datetime.now()
     relevant_lines = []
     for line in parsed_log:
         seconds_since_logged = seconds_between_lines(line_dict_a=line, line_dict_b=current_time) 
@@ -94,29 +92,29 @@ def tally_usage_within_interval(parsed_log=None, within_n_days=14):
             totals[key] += line[key]
     return totals
 
-def generate_report_text(input_line=None):
-    if input_line is None:
+def generate_report_text(parsed_log=None):
+    if parsed_log is None:
         return "No input given!"
-    stocks = {}
-    for key in input_line:
-        print('key is: {}'.format(key))
-        if key == 'date':
-            continue
-        grams_per_day = usage_rates[key]
-        current_stock = input_line[key]
-        tare_weight = tare_values[key]
-
-        stocks[key] = days_of_stock_remaining(grams_per_day=grams_per_day,
-                                              current_stock=current_stock,
-                                              tare_weight=tare_weight)
+    #stocks = {}
+    #for key in input_line:
+    #   print('key is: {}'.format(key))
+    #   if key == 'date':
+    #       continue
+    #   grams_per_day = usage_rates[key]
+    #   current_stock = input_line[key]
+    #   tare_weight = tare_values[key]
+        #stocks[key] = days_of_stock_remaining(grams_per_day=grams_per_day,
+                                              #current_stock=current_stock,
+                                              #tare_weight=tare_weight)
         #print(''.join(["{}: {} days\n".format(key, asdf[key]) for key in asdf]))
+    stocks = tally_usage_within_interval(parsed_log=parsed_log)
         
     print(stocks)
     return stocks
 
 def notify_routine():
     parsed_log = parse_log(log_filename)
-    notification_text = generate_report_text(input_line=parsed_log[-1])
+    notification_text = generate_report_text(parsed_log=parsed_log)
     notify.send(notification_text)
 
 def main():
