@@ -47,7 +47,7 @@ def seconds_between_lines(line_dict_a=None, line_dict_b=None, fmt='%c'):
 
 def usage_between_lines(line_a=None, line_b=None):
     """
-    determines the amount of stock used between each
+    determines the amount of stock used between each line of the log
     """
     if line_a is None or line_b is None:
         return False
@@ -56,14 +56,11 @@ def usage_between_lines(line_a=None, line_b=None):
         if staple == 'date':
             continue
         staple_usage = line_b[staple] - line_a[staple]
+        #account for stock being added to the container:
+        if staple_usage <= 0:
+            staple_usage = 0
         staple_diffs[staple] = staple_usage
     return staple_diffs
-
-#full report:
-#At your current average rate of <USAGE_RATE>g per day, <NUM_DAYS> days of <STAPLE> remain.
-
-#I want a report to be sent AFTER each time I update any particular stock 
-#AND I want another report to be sent once a day at noon.
 
 def filtered_within_n_days(parsed_log=None, days=14):
     _seconds_in_day = 60 * 60 * 24
@@ -79,6 +76,8 @@ def filtered_within_n_days(parsed_log=None, days=14):
 def tally_usage_within_interval(parsed_log=None, within_n_days=14):
     #scan through log, discard invalid lines:
     relevant_lines = filtered_within_n_days(parsed_log=parsed_log, days=within_n_days)
+    # a list of adjacent pairs of lines, (i.e.: 0,1, 1,2, 2,3, 3,4) 
+    # check changes between these pairs:
     line_index_pairs = [(i, i + 1) for i in range(len(relevant_lines) - 1)]
     usage_vals = []
     for index_pair in line_index_pairs:
@@ -86,36 +85,47 @@ def tally_usage_within_interval(parsed_log=None, within_n_days=14):
         line_b = relevant_lines[index_pair[1]]
         staple_use = usage_between_lines(line_a=line_a, line_b=line_b)
         usage_vals.append(staple_use)
+    # a zeroed out list of our possible staples:
     totals = {key:0 for key in relevant_lines[0] if key != 'date'}
     for line in usage_vals:
         for key in line:
             totals[key] += line[key]
     return totals
 
-def generate_report_text(parsed_log=None):
-    if parsed_log is None:
-        return "No input given!"
-    stocks = tally_usage_within_interval(parsed_log=parsed_log)
-    return stocks
-
-def legible_usage_stats(usage_dict=None):
+def legible_usage_stats(usage_dict=None, unit='g', title='2 week usage'):
     if usage_dict is None:
         return False
     output_string = ""
     for key in sorted(usage_dict):
-        #if key == sorted(usage_dict)[-1]:
-            #output_string += ' and'
-        output_string += '\n{}g of {}'.format(round(usage_dict[key]), key)
-    #output_string += '.'
-    output_text = "2 week usage:{}".format(output_string)
+        if key == sorted(usage_dict)[0]:
+            pass
+        elif key == sorted(usage_dict)[-1]:
+            output_string += ' and '
+        else:
+            output_string += ', '
+        output_string += '{}{} of {}'.format(round(usage_dict[key]), unit, key)
+    output_string += '.'
+    output_text = "{}: {}".format(title, output_string)
     print(output_text)
     return output_text
 
-def notify_routine():
+def compare_stock_with_usage(usage_dict=None, stock_dict=None):
+    if usage_dict is None or stock_dict is None:
+        return False
+    use_rates = {key:round(stock_dict[key] / (usage_dict[key] / 14)) for key in usage_dict}
+    output_text = legible_usage_stats(usage_dict=use_rates, unit=' days', title='Days of stock remaining')
+    return output_text
+
+def notify_routine(log_filename=log_filename):
     parsed_log = parse_log(log_filename)
-    staples_dict = generate_report_text(parsed_log=parsed_log)
-    used_staples = {pair[0]:pair[1] for pair in staples_dict.items() if pair[1] != 0}
+    current_stock = dict([pair for pair in parsed_log[-1].items() if pair[0] != 'date'])
+    #tally usage within lines of date 2 weeks or newer:
+    staples_dict = tally_usage_within_interval(parsed_log=parsed_log)
+    #filter out the key/value pairs that are zero.
+    used_staples = dict([pair for pair in staples_dict.items() if pair[1] != 0])
+    #legible_usage_state takes a cleaned list of nonzero values
     notify.send(legible_usage_stats(usage_dict=used_staples))
+    notify.send(compare_stock_with_usage(usage_dict=staples_dict, stock_dict=current_stock))
 
 def main():
     notify_routine()

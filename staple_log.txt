@@ -1,0 +1,17 @@
+{'black beans': 1000.0, 'brown rice': 999.0, 'kosher salt': 500.0, 'MSG': 300.0, 'date': 'Fri Jan 18 02:59:03 2019', 'flour': 6.0}
+{'black beans': 1000.0, 'brown rice': 6.0, 'kosher salt': 500.0, 'MSG': 300.0, 'date': 'Fri Jan 18 02:59:03 2019', 'flour': 6.0}
+{'black beans': 1000.0, 'brown rice': 6.0, 'kosher salt': 500.0, 'MSG': 300.0, 'date': 'Fri Jan 18 02:59:03 2019', 'flour': 6.0}
+{'MSG': 300.0, 'black beans': 6.0, 'date': 'Fri Jan 18 03:00:50 2019', 'kosher salt': 500.0, 'brown rice': 999.0, 'flour': 800.0}
+{'MSG': 300.0, 'black beans': 6.0, 'date': 'Fri Jan 18 03:00:50 2019', 'kosher salt': 500.0, 'brown rice': 999.0, 'flour': 800.0}
+{'MSG': 300.0, 'black beans': 6.0, 'date': 'Fri Jan 18 03:00:50 2019', 'kosher salt': 500.0, 'brown rice': 178, 'flour': 800.0}
+{'MSG': 300.0, 'black beans': 6.0, 'date': 'Fri Jan 18 03:00:50 2019', 'kosher salt': 500.0, 'brown rice': 176.0, 'flour': 800.0}
+{'MSG': 300.0, 'black beans': 176.0, 'date': 'Fri Jan 18 03:00:50 2019', 'kosher salt': 500.0, 'brown rice': 176.0, 'flour': 800.0}
+{'MSG': 300.0, 'black beans': 176.0, 'date': 'Fri Jan 18 03:00:50 2019', 'kosher salt': 500.0, 'brown rice': 176.0, 'flour': 800.0}
+{'MSG': 300.0, 'black beans': 904.0, 'date': 'Fri Jan 18 03:00:50 2019', 'kosher salt': 500.0, 'brown rice': 176.0, 'flour': 800.0}
+{'MSG': 300.0, 'black beans': 726.0, 'date': 'Fri Jan 18 03:00:50 2019', 'kosher salt': 500.0, 'brown rice': 176.0, 'flour': 800.0}
+{'brown rice': 999.0, 'black beans': 1000.0, 'date': 'Fri Jan 18 03:34:41 2019', 'flour': 800.0, 'MSG': 300.0, 'kosher salt': 1386.0}
+{'brown rice': 999.0, 'MSG': 300.0, 'flour': 800.0, 'date': 'Fri Jan 18 03:36:37 2019', 'kosher salt': 500.0, 'black beans': 1386.0}
+{'black beans': 1000.0, 'date': 'Sat Jan 19 18:30:26 2019', 'flour': 800.0, 'kosher salt': 1236.0, 'brown rice': 999.0, 'MSG': 300.0}
+{'black beans': 1000.0, 'date': 'Sat Jan 19 18:30:26 2019', 'flour': 800.0, 'kosher salt': 1236.0, 'brown rice': 999.0, 'MSG': 1151.0}
+{'black beans': 1000.0, 'date': 'Sat Jan 19 18:30:26 2019', 'flour': 800.0, 'kosher salt': 1236.0, 'brown rice': 999.0, 'MSG': 1151.0}
+{'black beans': 1000.0, 'date': 'Sat Jan 19 18:30:26 2019', 'flour': 800.0, 'kosher salt': 1151.0, 'brown rice': 999.0, 'MSG': 1151.0}
