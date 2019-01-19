@@ -1,8 +1,11 @@
+#! /usr/bin/python3
+
 import ast
 from datetime import datetime
 from itertools import cycle
 from random import randint, random
 from read_scale import *
+from notify_script import *
 import RPi.GPIO as GPIO
 from time import sleep
 
@@ -46,18 +49,9 @@ def flash_all(rate=.1, n=3):
         sleep(rate)
 
 def logging_routine(scale_value=None, staple_choice=None):
-    #TODO: figure out a way to log the last values of each staple.
-    # once every 10 minutes, check whether the last line in the log file has changed, if so, 
-    # write a new line with the updated gram values
-    # determine the average rate of change for the last many values (logged every day at noon?)
-    # and determine roughly when the staple will run out.
-    # TODO: account for tare values in the logged measurements.
-    # TODO: fire off the most recent measures to a push notification.
     if scale_value is None or staple_choice is None:
         return False
-    #print("Measured {}g of {}. Logging that.".format(scale_value[0], staple_choice))
     log_path = "{}/{}".format(current_working_directory, log_filename)
-    #print("log_path:{}".format(log_path))
     #initialize the log if it doesn't already exist:
     if not os.path.exists(log_path):
         with open(log_path, 'x') as log:
@@ -67,10 +61,9 @@ def logging_routine(scale_value=None, staple_choice=None):
     with open(log_path, 'r') as log:
         for line in log:
             line_text = log.read()
-            #print(line_text)
             log_contents.append(line_text)
     last_line = log_contents[-1]
-    #write the most recent values to the log (TODO: along with the current date)
+    #write the most recent values to the log 
     log_data[staple_choice] = scale_value[0]
     with open(log_path, 'a') as log:
         log.write(str(log_data) + '\n')
@@ -116,7 +109,6 @@ def main():
                     measurement_repeats = 0
                 else:
                     if choice_pin is not None and choice_timeout > 0:
-                        #print(choice_pin)
                         #blink the selected pin:
                         GPIO.output(choice_pin, next(flipper))
                     else:
@@ -136,6 +128,8 @@ def main():
                 flash_all(n=5)
                 #write to the log file:
                 logging_routine(scale_value=scale_value, staple_choice=staple_choice)
+                #send two push notifications to the phone:
+                notify_routine(log_filename=log_filename)
                 #clear out old values:
                 staple_choice = None
                 set_all_low()

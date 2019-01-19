@@ -93,6 +93,7 @@ def tally_usage_within_interval(parsed_log=None, within_n_days=14):
     return totals
 
 def legible_usage_stats(usage_dict=None, unit='g', title='2 week usage'):
+    print(usage_dict)
     if usage_dict is None:
         return False
     output_string = ""
@@ -109,10 +110,15 @@ def legible_usage_stats(usage_dict=None, unit='g', title='2 week usage'):
     print(output_text)
     return output_text
 
+def safe_div(x, y):
+    if y == 0:
+        return 0
+    return x / y
+
 def compare_stock_with_usage(usage_dict=None, stock_dict=None):
     if usage_dict is None or stock_dict is None:
         return False
-    use_rates = {key:round(stock_dict[key] / (usage_dict[key] / 14)) for key in usage_dict}
+    use_rates = {key:round(safe_div(stock_dict[key], safe_div(usage_dict[key], 14))) for key in usage_dict}
     output_text = legible_usage_stats(usage_dict=use_rates, unit=' days', title='Days of stock remaining')
     return output_text
 
