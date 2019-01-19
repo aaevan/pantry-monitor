@@ -35,10 +35,10 @@ Bill of materials, thoughts on material choices:
         a starter kit is really helpful. they put all the relevant stuff in one box so you don't have to go hunting down each particular piece.
         I had a bad experience with the canakit default GPIO to breadboard adapter. Just try to talk to a few pins at once using the female to female jumper wires.
     a 10 pack of lighted arcade buttons
-        each requires a small modification to be used with the pi. The leds come pre-wired with a resistor relevant to power at 12v, we want something much lower
     a board from oshpark or the relevant components in breadboard or protoboard format
         I thought I could just drive the switch LEDs from the GPIO pins. I was wrong. Strange hardware problems start happening if you're drawing too much current.
         just save yourself the trouble and drive your LEDs with a transistor and draw off of the 5v rail.
+i       It seems like a trivial difference. We can think, "Hey, it works! I'm good!" but it will cause you angst and woe further down the line. Save yourself the headache and drive the LEDs with transistors. Really.
     a bunch of jumper wires, male-to-male and female-to-female.
     heatshrink tubing for every soldered connection (because we like not shorting out our everything)
         heatshrink makes everything better.
@@ -49,10 +49,19 @@ Bill of materials, thoughts on material choices:
             a cheapo heatshrink kit off of ebay (LINK), I wish I had 2mm and smaller though for some connections.
             a decent hot air gun (really, as long as it doesn't catch on fire, go for it)
 
-burn raspbian to an SD card (plenty of ways to do this, I used a torrented image and dd.)
+burn raspbian to an SD card:
     download image of raspbian via torrent (https://www.raspberrypi.org/downloads/raspbian/)    
-    write image using dd to correct device (find using ls /dev | grep sd)   
-    do NOT write to sda. sda is where the os lives. dd is dangerous.
+    for the less metal, less hackerly minded, we can use a simple, easy to use tool like Etcher 
+        (TODO: LINK).
+    if you're comfortable, we can also write the image directly to a disk using dd.
+    follow a very thorough, well-written tutorial HERE:
+        (https://www.raspberrypi.org/documentation/installation/installing-images/linux.md)
+    Make VERY sure you're pointing at the right device before proceeding.
+    dd doesn't care about your data. It will devour it and not even blink
+    the relevant device will only appear when your SD card is mounted.
+    do NOT write to sda. sda is where the os lives. 
+    dd will not display any output. There are other tools like pv that will help display your progress:
+        (see this question: https://askubuntu.com/questions/215505/how-do-you-monitor-the-progress-of-dd
 
 get the pi working headlessly (because sometimes you don't have an HDMI-ready device:
     once we've burned the raspbian image to the SD card, take a look at it on another computer.
@@ -116,9 +125,18 @@ physical construction of interface (switches, LEDs, wiring, heatshrink)
     We need to swap out the resistors on each leg of the leds in the little plastic casings with new ones
     I used a heavy piece of metal and some packing tape to hold the ends close together for ease of soldering.
     <picture of LED soldering jig>
-    another way would be to swap in LEDs without included resistors
+    each requires a small modification to be used with the pi. The leds come pre-wired with a resistor relevant to power at 12v, we want something much lower
+    another way would be to unbend the legs and swap in LEDs without included resistors
+    this just means we need to place the current limiting resistors somewhere else in the circuit.
+    I've used 220ohm through-hole resistors but we could just have easily used 330.
+    For the transistor middle pin, I've used 2k but we could just have easily used anything from 1k to 10k.
     this is easier and faster, it just requires that we have a few LEDs on hand already. If you bought a raspberry pi starter kit, there should be a few included.
     <image of LED swapping>
+    for managing a whole tangle of wires and wiring together a circuit, I've found that the time I've spent learning to useKiCAD has been more than repaid in frustration saved when dealing with breadboards.
+    the one thing I will say is that it's easy with designing and fabricating circuit boards (made especially unpleasant by the 2+ week turnaround between trial and error) try your best to not fall prey to magical thinking.
+    I've made the same error maybe a half dozen times now where I assume that the pinout of one transistor will be the same as another. Really: use the footprint and schematic symbol for the component you're actually going to use.
+    Take a look at the finished circuit and trace out some of the paths: does the signal pin of the transistor correspond to the 10k resistor and the GPIO output pin? If not, you've messed up somewhere.
+    This us just my preference, you can just as easily fabricate the circuit on protoboard or plug it into a breadboard.
 
 interact with GPIO pins, both inputs and outputs.
     from within a python prompt (use python 3 (python3 from the terminal), python2 will soon no longer be maintained) 
