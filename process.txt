@@ -1,5 +1,32 @@
+Idea 1: A pantry tracker: multiple electronic scales report the weight of tared-out Mason jars or other containers whenever they are removed from their spots. That, or a single scale that reports on the last item pressed, say, flour. Remove the flour from the cupboard, use some, press the flour button, place the item in the scale, wait for a beep/blink, then return it to its place in the shelf. Add a layer of notifications or something to remind you to get more of something. 
+
+That might be a lot, but the hardware required is fairly minimal given an easily interfaced electronic scale.   
+
 STEPS:
 broad overarching design thoughts:
+    I initially considered using multiple scales to measure different staples
+    it soon made more sense to use a single scale and select the relevant logging routine by button press
+    this also meant I got to play with giant arcade-style lighted buttons.
+    To operate the pantry-monitor
+        turn on the scale. The buttons are by default unlit. 
+        They only light up when the scale is detected to be on and having a live USB connection.
+        the main unit will start cycling through each LED, 
+            1 on, 1 off,
+            2 on, 2 off,
+            3 on, 3 off,
+            4 on, 4 off,
+            5 on, 5 off,
+        when one of the buttons is detected as pressed a single LED will blink:
+            (slightly buggy, I should be using interrupts instead):
+        when a single LED is blinking, the chosen staple (set to buttons/LEDs 1 through 5 accordingly) can be logged
+        when a non-zero value is measured on the scale, and that value does not change for 4 consecutive reads,
+        a new line in the log-file is written with the last known values for the other staples along with the update value for the chosen staple
+        When the value of the scale does not change and stays at zero, the choosing routine will time out.
+        given a non-zero value that -does- change from read to read, more time will be added to the timeout routine
+        if a non-zero value is not detected and the timeout runs out, the system returns to the default cycling state
+        when the scale turns off to save power, the LEDs will stop cycling and button presses will no longer be registered until the scale is turned on again.  
+        upon a successful read and log-file write, a notification (to the given registered URL stored on the pi) will be sent to the user's phone or any subscribed device.
+        That notification will reflect the changing values of the staples over time and provide an estimate of the remaining days of stock and current gram amounts remaining.
 
 Major moving pieces:
 
@@ -82,12 +109,16 @@ acquire and setup a known usb scale (thoughts on getting and interpreting raw by
 physical construction of interface (switches, LEDs, wiring, heatshrink)
     For the interface, I bought a 10 pack of light-up arcade switches.
     The come in a ridiculous, messy format. Don't be alarmed:
-    <picture of switches>
+    <picture of dissasembled switches>
+    <picture of several switches assembled and lined up>
     The switches go together in a fairly straight forward way.
+    <picture of switch broken apart>
     We need to swap out the resistors on each leg of the leds in the little plastic casings with new ones
     I used a heavy piece of metal and some packing tape to hold the ends close together for ease of soldering.
     <picture of LED soldering jig>
     another way would be to swap in LEDs without included resistors
+    this is easier and faster, it just requires that we have a few LEDs on hand already. If you bought a raspberry pi starter kit, there should be a few included.
+    <image of LED swapping>
 
 interact with GPIO pins, both inputs and outputs.
     from within a python prompt (use python 3 (python3 from the terminal), python2 will soon no longer be maintained) 
@@ -96,32 +127,42 @@ interact with GPIO pins, both inputs and outputs.
     (just an LED, just a switch, two LEDs, an LED with a switch, two switches, two LEDs and two switches)
     I recommend trying to get the simplest moving pieces working independently and then slowly start gluing them together into larger and larger pieces
     if you try to tackle too much at once, you won't have a clear indication of what is going wrong.
-    You may find it's easier to do some deal of the system-agnostic trial and error (the stuff that doesn't involve the GPIO pins) locally on your laptop and then move thing over when it works nicely.
+    You may find it's easier to do some deal of the trial and error (especially the stuff that doesn't involve the GPIO pins) locally on a fast, comfortable machine and then move thing over when it works nicely.
+    Each time I will switch between machines (laptop to pi, pi to laptop), 
+    I like to push my changes to github, (git commit -a, git push origin master)
+    then immediately git pull origin master on the other machine.
+    I get that there are ways of merging changes, I haven't fit that in my brain yet and this is an easy and predicable enough workflow for my purposes.
 
-
-"   
+notifications:
 pip3 install notify-run use notify.run for push notifications
-To get notifications working, you will have to manually step through the registration process (as described at the bottom of the page here: https://pypi.org/project/notify-run/ )  
-If you are already subscribed to one notification source, you may have to clear the existing settings by going into chrome settings-->Site settings-->Notifications and clearing or resetting existing values.  scroll down to the blue "subscribe on this device button and allow notifcations for this site.
+    To get notifications working, you will have to manually step through the registration process 
+    (as described at the bottom of the page here: https://pypi.org/project/notify-run/ )  
+
+notify.run works by allowing push notifications to be sent from your phone's browser. It's free and simple to setup.
+If you are already subscribed to one notification source, you may have to clear the existing settings by going into 
+    chrome settings-->Site settings-->Notifications and clearing or resetting existing values.  scroll down to the blue "subscribe on this device button and allow notifcations for this site.
 Do a few test notifications, just to make sure it's working. I had my phone on silent and no vibration and thought it wasn't working. don't be me.  
     
-make sure the python path is correct in the top line of gpio_control.py 
+There's several moving pieces to this project:
+    reading the raw byte values off of the usb scale (byte manipulation in python)
+    set up the GPIO pins to activate different listening and output states (idle animation or choice animation)
+    <gif of idle animation>
+    make sure the python path is correct in the top line of gpio_control.py 
 cd ~/; git clone https://github.com/aaevan/pantry-monitor   
 to the last line of your bashrc (sudo <editor> /home/pi/.bashrc), add the following:    
 sudo /home/pi/pantry-monitor/gpio_control.py    
-    
-open up your most easily useable editor by running crontab -e (I use vim, you can use nano) 
-and enter the following:    
-@reboot echo 'rebooted at `date`' >> /home/pi/log.txt   `
-@reboot /home/pi/pantry-monitor/gpio_control.py &   Caution that if you have a lot of print statements and debug messages
-save and quit and reboot the pi. I've added a logging command so I can see and verify that things from my crontab are running.  when you go to log into your pi, your console will be spammed with a whole host of message
-    I like to stop this when it happens by running kill -9 `pgrep <process name>` 
-    When you include a command in backticks, it's evaluated, then the outer command is run.
+
+once the scripts you've written do something properly interesting, stable and predictable, we're ready to add the script to the pi's startup routine:
+    open up your most easily useable editor by running crontab -e (I use vim, you can use nano) and enter the following:    
+        @reboot echo 'rebooted at `date`' >> /home/pi/log.txt
+        @reboot /home/pi/pantry-monitor/gpio_control.py & 
+    save and quit and reboot the pi. I've added a logging command so I can see and verify that things from my crontab are running.  
+    Caution: if you have a lot of print statements and debug messages in your mains script, when you go to log into your pi, your console will be spammed with all that output and it will be difficult input commands and read output.
+        I like to stop this when it happens by running kill -9 `pgrep <part of process name>` 
+        kill -9 `pgrep gpio` works on my system
+    When you include a command in backticks, it will first run, then the outer command is run.
     This is useful for stuff like date and fetching a process id without running a separate command.
-Idea 1: A pantry tracker: multiple electronic scales report the weight of tared-out Mason jars or other containers whenever they are removed from their spots. That, or a single scale that reports on the last item pressed, say, flour. Remove the flour from the cupboard, use some, press the flour button, place the item in the scale, wait for a beep/blink, then return it to its place in the shelf. Add a layer of notifications or something to remind you to get more of something. 
-That might be a lot, but the hardware required is fairly minimal given an easily interfaced electronic scale.   
     
 NOTES:  
-all header pin extenders are not created equal. Mine shorts out when I plug it in.  
 pw updated to: pantry_tracker_pw    
 
