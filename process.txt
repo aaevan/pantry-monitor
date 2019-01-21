@@ -4,50 +4,51 @@ That might be a lot, but the hardware required is fairly minimal given an easily
 
 STEPS:
 broad overarching design thoughts:
-    I initially considered using multiple scales to measure different staples
-    it soon made more sense to use a single scale and select the relevant logging routine by button press
-    this also meant I got to play with giant arcade-style lighted buttons.
-    To operate the pantry-monitor
-        turn on the scale. The buttons are by default unlit. 
+    I initially considered using multiple scales to measure different staples.
+    It soon made more sense to use a single scale and select the relevant logging routine by button press.
+    This also meant I got to play with giant arcade-style lighted buttons.
+
+    Operation:
+        turn on the scale. The buttons are by default unlit.
         They only light up when the scale is detected to be on and having a live USB connection.
-        the main unit will start cycling through each LED, 
+        The main unit will start cycling through each LED, 
             1 on, 1 off,
             2 on, 2 off,
             3 on, 3 off,
             4 on, 4 off,
             5 on, 5 off,
-        when one of the buttons is detected as pressed a single LED will blink:
+        When one of the buttons is detected as pressed a single LED will blink:
             (slightly buggy, I should be using interrupts instead):
-        when a single LED is blinking, the chosen staple (set to buttons/LEDs 1 through 5 accordingly) can be logged
-        when a non-zero value is measured on the scale, and that value does not change for 4 consecutive reads,
+        When a single LED is blinking, the chosen staple (set to buttons/LEDs 1 through 5 accordingly) can be logged
+        When a non-zero value is measured on the scale, and that value does not change for 4 consecutive reads,
         a new line in the log-file is written with the last known values for the other staples along with the update value for the chosen staple
         When the value of the scale does not change and stays at zero, the choosing routine will time out.
-        given a non-zero value that -does- change from read to read, more time will be added to the timeout routine
-        if a non-zero value is not detected and the timeout runs out, the system returns to the default cycling state
-        when the scale turns off to save power, the LEDs will stop cycling and button presses will no longer be registered until the scale is turned on again.  
-        upon a successful read and log-file write, a notification (to the given registered URL stored on the pi) will be sent to the user's phone or any subscribed device.
+        Given a non-zero value that -does- change from read to read, more time will be added to the timeout routine
+        If a non-zero value is not detected and the timeout runs out, the system returns to the default cycling state
+        When the scale turns off to save power, the LEDs will stop cycling and button presses will no longer be registered until the scale is turned on again.  
+        Upon a successful read and log-file write, a notification (to the given registered URL stored on the pi) will be sent to the user's phone or any subscribed device.
         That notification will reflect the changing values of the staples over time and provide an estimate of the remaining days of stock and current gram amounts remaining.
 
 Major moving pieces:
 
 Bill of materials, thoughts on material choices:
-    a raspberry pi 
-        a starter kit is really helpful. they put all the relevant stuff in one box so you don't have to go hunting down each particular piece.
-        I had a bad experience with the canakit default GPIO to breadboard adapter. Just try to talk to a few pins at once using the female to female jumper wires.
-    a 10 pack of lighted arcade buttons
+    a raspberry pi starter kit(LINK)
+        a starter kit is really helpful. they put all the relevant stuff in one box so you don't have to go hunting down each piece. If not the whole starter kit, get yourself a case.
+        A few times, I've made the mistake of touching the internals of the pi while it's running and it just shuts off. It's a robust little machine but it's not immortal. If the pi shuts down unexpectedly, it's probably not fried, let it think about its choices for several minutes (unconnected to anything) and things will probably work again. Double check your wiring and try again. It's easy to accidentally jump a GPIO pin to ground and prevent the Pi from starting at all.
+        I had a bad experience with the canakit default GPIO to breadboard adapter. Just try to talk to a few pins at once using the female to female jumper wires. Try not to hot-swap jumpers to the IO pins if you can help it.
+    a 10 pack of lighted arcade buttons (LINK)
     a board from oshpark or the relevant components in breadboard or protoboard format
         I thought I could just drive the switch LEDs from the GPIO pins. I was wrong. Strange hardware problems start happening if you're drawing too much current.
         just save yourself the trouble and drive your LEDs with a transistor and draw off of the 5v rail.
-i       It seems like a trivial difference. We can think, "Hey, it works! I'm good!" but it will cause you angst and woe further down the line. Save yourself the headache and drive the LEDs with transistors. Really.
+        It seems like a trivial difference. We can think, "Hey, it works! I'm good!" but it will cause you angst and woe further down the line. Save yourself the headache and drive the LEDs with transistors. Really.
     a bunch of jumper wires, male-to-male and female-to-female.
-    heatshrink tubing for every soldered connection (because we like not shorting out our everything)
+    heatshrink tubing for every soldered connection (because it's nice to not short out everything)
         heatshrink makes everything better.
-    a decent soldering/heatshrink setup
-        I use:
-            a temperature controlled hakko iron (worth every penny)
-            a good roll of solder (don't huff solder fumes, kids)
-            a cheapo heatshrink kit off of ebay (LINK), I wish I had 2mm and smaller though for some connections.
-            a decent hot air gun (really, as long as it doesn't catch on fire, go for it)
+    a decent soldering/heatshrink setup. I use:
+        a temperature controlled hakko iron (worth every penny)
+        a good roll of solder (don't huff solder fumes, kids)
+        a cheapo heatshrink kit off of ebay (LINK), I wish I had 2mm and smaller though for some connections.
+        a decent hot air gun (LINK)
 
 burn raspbian to an SD card:
     download image of raspbian via torrent (https://www.raspberrypi.org/downloads/raspbian/)    
@@ -57,45 +58,53 @@ burn raspbian to an SD card:
     follow a very thorough, well-written tutorial HERE:
         (https://www.raspberrypi.org/documentation/installation/installing-images/linux.md)
     Make VERY sure you're pointing at the right device before proceeding.
-    dd doesn't care about your data. It will devour it and not even blink
-    the relevant device will only appear when your SD card is mounted.
-    do NOT write to sda. sda is where the os lives. 
+    dd doesn't care about your data. It will devour it, replace it with random noise and not even blink.
+    The relevant device will only appear when your SD card is mounted.
+    Do NOT write to sda. sda is where the os lives. 
     dd will not display any output. There are other tools like pv that will help display your progress:
         (see this question: https://askubuntu.com/questions/215505/how-do-you-monitor-the-progress-of-dd
 
-get the pi working headlessly (because sometimes you don't have an HDMI-ready device:
+OPTIONAL: get the pi working headlessly (because sometimes, like me when I wrote this, you don't have an HDMI-ready device):
     once we've burned the raspbian image to the SD card, take a look at it on another computer.
         navigate to the boot directory and initialize the file: 
-            <code> cd /Volumes/boot; touch ssh</code>
+            <code>cd /Volumes/boot; touch ssh</code>
     this allows the user to login over ssh. otherwise any attempts are blocked
 
 Things are a whole lot easier if we connect a screen and a keyboard.
+By doing some of the setup with a screen and keyboard, we can avoid having to manually input your wifi network's ssid and password into a file.
 Debugging and editing on the pi will be easier, there will be fewer slowdowns and you'll get immediate feedback when things aren't working.
-A few times, I've made the mistake of touching the internals of the pi while it's running and it just shuts off. It's a robust little machine but it's not immortal.
-We can avoid then having to manually input your wifi network's ssid and password into a file.
-    Add WPA supplicant config file to boot directory to automatically login to your local wifi (given SSID and password)    
+    Add WPA supplicant config file to boot directory to automatically login to your local wifi (given SSID and password)
         follow the steps here: https://www.raspberrypi.org/forums/viewtopic.php?t=191252
-        
+
 set up pi with a comfortable environment
     make sure we change the default password to give ourselves some semblance of security:
-        <code>passwd</code>
-    install relevant libraries: sudo apt-get install python-dev python3-rpi.gpio    also do pip3 install notify-run
+        <code>passwd</code> and follow the onscreen prompts
+    install relevant libraries: 
+        <code>
+        sudo apt-get install python-dev python3-rpi.gpio
+        pip3 install notify-run
+        </code>
     and of course, install your favorite editor and get yourself some version control:  
-    sudo apt-get install vim git    
-    change your default editor to your favorite one:    
-    sudo update-alternatives --config editor    
+        <code>sudo apt-get install vim git</code>
+    change the pi's default editor to your favorite one:    
+        <code>sudo update-alternatives --config editor</code>
     pull down a repository to edit locally  I find that the pi is sometimes sluggish to do lots of edits on quickly.
     I'm not going to go into setting up a repository here, 
     something like https://help.github.com/articles/adding-an-existing-project-to-github-using-the-command-line/ should do the trick
     change your name and email in git so that you can commit new changes to your repository:    
-    git config --global user.name "<your name>" 
-    git config --global user.email "<your email>"   initialize your repository somewhere else, on say, a fully fledged computer
+        <code>
+        git config --global user.name "<your name>"
+        git config --global user.email "<your email>
+        </code>
+    if you're creating a new project, initialize your repository from somewhere else (say, a laptop).
     
 acquire and setup a known usb scale (thoughts on getting and interpreting raw byte values)
-    put batteries into and plug in over USB your scale (specific model required)    
+    put batteries into and plug in over USB your scale (Dymo M10 usb scale LINK)
     The scale apparently also works without the batteries, but I think it's nice not to stress out the Pi too much and bring your own power.
-    usb.core.USBError: [Errno 13] Access denied (insufficient permissions)  
-    use lsusb to see your connected devices: lsusb | grep Dymo (capitals matter!)   
+    When you first try to talk to the scale, you'll probably get an error like this:
+        <code>usb.core.USBError: [Errno 13] Access denied (insufficient permissions)</code>
+    use lsusb to see your connected devices: 
+    <code>lsusb | grep Dymo</code> (capitals matter!)   
     To find the name of a device, I will sometimes find the diff between two temporary files:
         <code>
         ls /dev > /tmp/1
@@ -107,7 +116,7 @@ acquire and setup a known usb scale (thoughts on getting and interpreting raw by
         <code> cat /dev/hidraw0 | xxd -c 6</code> (displays the raw bytes output)
     now that we know how long the message it sends over and over is, we can start doing interesting things with the output
     I've gone through some contortions to get the byte values into a usable format.
-    <screenshot of read_scale()>
+    <screenshot of read_scale byte manipulation>
     by default we (as a normal user) can't just go reading raw values from arbitrary hardware.
     to make it so we don't have to run everything under sudo or as root, do the following, then restart the pi:
         make a new file (the extra number in the name is important):
@@ -118,12 +127,13 @@ acquire and setup a known usb scale (thoughts on getting and interpreting raw by
 physical construction of interface (switches, LEDs, wiring, heatshrink)
     For the interface, I bought a 10 pack of light-up arcade switches.
     The come in a ridiculous, messy format. Don't be alarmed:
-    <picture of dissasembled switches>
+    <picture of dissasembled switches> (gif switching between each state?)
     <picture of several switches assembled and lined up>
     The switches go together in a fairly straight forward way.
     <picture of switch broken apart>
     We need to swap out the resistors on each leg of the leds in the little plastic casings with new ones
     I used a heavy piece of metal and some packing tape to hold the ends close together for ease of soldering.
+    (This is why third hand tools exist. They're great.)
     <picture of LED soldering jig>
     each requires a small modification to be used with the pi. The leds come pre-wired with a resistor relevant to power at 12v, we want something much lower
     another way would be to unbend the legs and swap in LEDs without included resistors
@@ -139,9 +149,11 @@ physical construction of interface (switches, LEDs, wiring, heatshrink)
     This us just my preference, you can just as easily fabricate the circuit on protoboard or plug it into a breadboard.
 
 interact with GPIO pins, both inputs and outputs.
+    One of the great things we gain by using python is the use of the interpreter.
     from within a python prompt (use python 3 (python3 from the terminal), python2 will soon no longer be maintained) 
-    import RPi.GPIO as gpio (easier to type when lowercase?)  
-    I initially played around with the gpio pins and simple layouts 
+    import RPi.GPIO as GPIO
+    from time import sleep
+    I initially played around with the gpio pins and simple layouts and simple functions.
     (just an LED, just a switch, two LEDs, an LED with a switch, two switches, two LEDs and two switches)
     I recommend trying to get the simplest moving pieces working independently and then slowly start gluing them together into larger and larger pieces
     if you try to tackle too much at once, you won't have a clear indication of what is going wrong.
@@ -152,33 +164,43 @@ interact with GPIO pins, both inputs and outputs.
     I get that there are ways of merging changes, I haven't fit that in my brain yet and this is an easy and predicable enough workflow for my purposes.
 
 notifications:
-pip3 install notify-run use notify.run for push notifications
+    Use notify.run for push notifications
+    <code>pip3 install notify-run</code>
     To get notifications working, you will have to manually step through the registration process 
     (as described at the bottom of the page here: https://pypi.org/project/notify-run/ )  
 
 notify.run works by allowing push notifications to be sent from your phone's browser. It's free and simple to setup.
 If you are already subscribed to one notification source, you may have to clear the existing settings by going into 
     chrome settings-->Site settings-->Notifications and clearing or resetting existing values.  scroll down to the blue "subscribe on this device button and allow notifcations for this site.
-Do a few test notifications, just to make sure it's working. I had my phone on silent and no vibration and thought it wasn't working. don't be me.  
+Do a few test notifications, just to make sure it's working. I had my phone on silent and no vibration and thought it wasn't working. Don't be me. Again, simple pieces first, build up to complexity from predictable parts.
     
 There's several moving pieces to this project:
-    reading the raw byte values off of the usb scale (byte manipulation in python)
-    set up the GPIO pins to activate different listening and output states (idle animation or choice animation)
+    FILES:
+    read_scale.py: reading the raw byte values off of the usb scale (byte manipulation in python)
+    notify_script: handles reading off of staple_log and putting the information it gathers in a human readable format.
+    gpio_control.py: the top level script. Sets up the GPIO pins to activate different listening and output states. Imports read_scale and notify_script.
+    staple_log.txt: a python dictionary in plaintext, one per line. Stores the keys and values of each staple quantity and the date that the record was made. This is turned back into something useful using ast.literal_eval().
+
     <gif of idle animation>
     make sure the python path is correct in the top line of gpio_control.py 
-cd ~/; git clone https://github.com/aaevan/pantry-monitor   
-to the last line of your bashrc (sudo <editor> /home/pi/.bashrc), add the following:    
-sudo /home/pi/pantry-monitor/gpio_control.py    
+    <code>cd ~/; git clone https://github.com/aaevan/pantry-monitor</code>
+    to the last line of your bashrc (sudo <editor> /home/pi/.bashrc), add the following:    
+    <code>sudo /home/pi/pantry-monitor/gpio_control.py</code>
 
-once the scripts you've written do something properly interesting, stable and predictable, we're ready to add the script to the pi's startup routine:
-    open up your most easily useable editor by running crontab -e (I use vim, you can use nano) and enter the following:    
-        @reboot echo 'rebooted at `date`' >> /home/pi/log.txt
-        @reboot /home/pi/pantry-monitor/gpio_control.py & 
-    save and quit and reboot the pi. I've added a logging command so I can see and verify that things from my crontab are running.  
+Once the scripts you've written do something properly interesting, stable and predictable, we're ready to add the script to the pi's startup routine. There's several ways to run things at startup but it was only crontab that I could get to work. .bashrc I found only ran things when I ssh'd into the pi.
+    open up your most easily useable editor by running crontab -e (I use vim, you can use nano) and enter the following:
+        <code>
+        @reboot echo 'rebooted at' `date` >> /home/pi/log.txt
+        @reboot /home/pi/pantry-monitor/gpio_control.py &
+        </code>
+    '&' at the end of a line means run the command in the background where we don't have to see its output.
+    When you include a command in `backticks`, it will run first, then the outer command is run with the inner command replaced with its output.
+    save, quit and reboot the pi. 
+        <code>sudo shutdown -r now</code>
+    I've added a logging command so I can see and verify that things from my crontab are running.  
     Caution: if you have a lot of print statements and debug messages in your mains script, when you go to log into your pi, your console will be spammed with all that output and it will be difficult input commands and read output.
-        I like to stop this when it happens by running kill -9 `pgrep <part of process name>` 
-        kill -9 `pgrep gpio` works on my system
-    When you include a command in backticks, it will first run, then the outer command is run.
+    I like to stop this when it happens by running kill -9 `pgrep <part of process name>` 
+        <code>kill -9 `pgrep gpio` works on my syste</code>
     This is useful for stuff like date and fetching a process id without running a separate command.
     
 NOTES:  
