@@ -1,6 +1,7 @@
+Original idea:
+"""
 Idea 1: A pantry tracker: multiple electronic scales report the weight of tared-out Mason jars or other containers whenever they are removed from their spots. That, or a single scale that reports on the last item pressed, say, flour. Remove the flour from the cupboard, use some, press the flour button, place the item in the scale, wait for a beep/blink, then return it to its place in the shelf. Add a layer of notifications or something to remind you to get more of something. 
-
-That might be a lot, but the hardware required is fairly minimal given an easily interfaced electronic scale.   
+"""
 
 STEPS:
 broad overarching design thoughts:
@@ -32,20 +33,21 @@ broad overarching design thoughts:
 Major moving pieces:
 
 Bill of materials, thoughts on material choices:
-    a raspberry pi starter kit(LINK)
-        a starter kit is really helpful. they put all the relevant stuff in one box so you don't have to go hunting down each piece. If not the whole starter kit, get yourself a case.
+    --> a raspberry pi starter kit(LINK)
+        a starter kit is really helpful. they put all the relevant stuff in one box so you don't have to go hunting down each piece. If not the whole starter kit, get yourself a case. 
         A few times, I've made the mistake of touching the internals of the pi while it's running and it just shuts off. It's a robust little machine but it's not immortal. If the pi shuts down unexpectedly, it's probably not fried, let it think about its choices for several minutes (unconnected to anything) and things will probably work again. Double check your wiring and try again. It's easy to accidentally jump a GPIO pin to ground and prevent the Pi from starting at all.
         I had a bad experience with the canakit default GPIO to breadboard adapter. Just try to talk to a few pins at once using the female to female jumper wires. Try not to hot-swap jumpers to the IO pins if you can help it.
-    a 10 pack of lighted arcade buttons (LINK)
+    --> a 10 pack of lighted arcade buttons (LINK)
     a board from oshpark or the relevant components in breadboard or protoboard format
         I thought I could just drive the switch LEDs from the GPIO pins. I was wrong. Strange hardware problems start happening if you're drawing too much current.
         just save yourself the trouble and drive your LEDs with a transistor and draw off of the 5v rail.
         It seems like a trivial difference. We can think, "Hey, it works! I'm good!" but it will cause you angst and woe further down the line. Save yourself the headache and drive the LEDs with transistors. Really.
+        Transistors aren't scary, you basically whisper (volume as amount of current) at the middle pin through a high value resistor (1-10k) and it allows the other two to shout at one another.
     a bunch of jumper wires, male-to-male and female-to-female.
     heatshrink tubing for every soldered connection (because it's nice to not short out everything)
         heatshrink makes everything better.
     a decent soldering/heatshrink setup. I use:
-        a temperature controlled hakko iron (worth every penny)
+        a temperature controlled hakko iron (best $80 I've ever spent.)
         a good roll of solder (don't huff solder fumes, kids)
         a cheapo heatshrink kit off of ebay (LINK), I wish I had 2mm and smaller though for some connections.
         a decent hot air gun (LINK)
@@ -111,7 +113,7 @@ acquire and setup a known usb scale (thoughts on getting and interpreting raw by
         remove the device
         ls /dev > /tmp/2; diff /tmp/1 /tmp/2. 
         </code>
-    the same can be used for lsusb or anything else that changes when you plug in or connect a device. 
+    The same can be used for lsusb or anything else that changes when you plug in or connect a device. 
     We can see the changing state of the scale over USB by looking at the raw values:   
         <code> cat /dev/hidraw0 | xxd -c 6</code> (displays the raw bytes output)
     now that we know how long the message it sends over and over is, we can start doing interesting things with the output
@@ -126,7 +128,7 @@ acquire and setup a known usb scale (thoughts on getting and interpreting raw by
 
 physical construction of interface (switches, LEDs, wiring, heatshrink)
     For the interface, I bought a 10 pack of light-up arcade switches.
-    The come in a ridiculous, messy format. Don't be alarmed:
+    They come in a ridiculous, messy format. Don't be alarmed:
     <picture of dissasembled switches> (gif switching between each state?)
     <picture of several switches assembled and lined up>
     The switches go together in a fairly straight forward way.
@@ -147,6 +149,8 @@ physical construction of interface (switches, LEDs, wiring, heatshrink)
     I've made the same error maybe a half dozen times now where I assume that the pinout of one transistor will be the same as another. Really: use the footprint and schematic symbol for the component you're actually going to use.
     Take a look at the finished circuit and trace out some of the paths: does the signal pin of the transistor correspond to the 10k resistor and the GPIO output pin? If not, you've messed up somewhere.
     This us just my preference, you can just as easily fabricate the circuit on protoboard or plug it into a breadboard.
+    I have also placed the switches into a reversed cardboard box I had lying around. It's not exactly the perfect size but I was able to trace the locations for each switch onto the box, cut each hole with a sharp knife and tighten one half of the switch onto the box.
+    The nice thing about these switches is that they cleanly separate into the plastic body of the switch and the electronics (where all the soldering happens).
 
 interact with GPIO pins, both inputs and outputs.
     One of the great things we gain by using python is the use of the interpreter.
@@ -157,6 +161,10 @@ interact with GPIO pins, both inputs and outputs.
     (just an LED, just a switch, two LEDs, an LED with a switch, two switches, two LEDs and two switches)
     I recommend trying to get the simplest moving pieces working independently and then slowly start gluing them together into larger and larger pieces
     if you try to tackle too much at once, you won't have a clear indication of what is going wrong.
+    When intially setting up the wiring, work up to the full complexity, say, getting one switch to display its output on the command line then, getting 2-5 switches displaying output.
+    The pinout of the raspi can be a little confusing. I had to adjust my wiring a few times because I kept assuming a ground pin (PIN NUMBER?) was a usable GPIO pin.
+
+Prototyping with python, thoughts about version control:
     You may find it's easier to do some deal of the trial and error (especially the stuff that doesn't involve the GPIO pins) locally on a fast, comfortable machine and then move thing over when it works nicely.
     Each time I will switch between machines (laptop to pi, pi to laptop), 
     I like to push my changes to github, (git commit -a, git push origin master)

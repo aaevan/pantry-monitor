@@ -14,7 +14,7 @@ usage_rates = {'black beans':900/7, #2 lb/week
                'brown rice':(680 * 3)/7, #3 cups/week
                'flour':10/7,
                'kosher salt':10/7, 
-               'MSG':4/7,}
+               'MSG':2/7,}
 
 #given in grams
 tare_values = {'black beans':708, #1lb 9 oz for 1/2 gallon mason jar minus lid
@@ -38,7 +38,6 @@ def days_of_stock_remaining(grams_per_day=1600, current_stock=4000, tare_weight=
     days_remain = round((current_stock - tare_weight) / grams_per_day, 1)
     return  days_remain
 
-#TODO: parse our %c formatted datetime and see a rate of change?
 def seconds_between_lines(line_dict_a=None, line_dict_b=None, fmt='%c'):
     time_a = datetime.strptime(line_dict_a['date'], fmt)
     time_b = datetime.strptime(line_dict_b['date'], fmt)
