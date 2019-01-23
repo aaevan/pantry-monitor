@@ -10,9 +10,8 @@ broad overarching design thoughts:
     This also meant I got to play with giant arcade-style lighted buttons.
 
     Operation:
-        turn on the scale. The buttons are by default unlit.
-        They only light up when the scale is detected to be on and having a live USB connection.
-        The main unit will start cycling through each LED, 
+        Turn on the scale. When the scale is off, the button lights are unlit.
+        When the scale is detected to be on and having a live USB connection the main unit will start cycling through each LED:
             1 on, 1 off,
             2 on, 2 off,
             3 on, 3 off,
@@ -24,61 +23,59 @@ broad overarching design thoughts:
         When a non-zero value is measured on the scale, and that value does not change for 4 consecutive reads,
         a new line in the log-file is written with the last known values for the other staples along with the update value for the chosen staple
         When the value of the scale does not change and stays at zero, the choosing routine will time out.
-        Given a non-zero value that -does- change from read to read, more time will be added to the timeout routine
-        If a non-zero value is not detected and the timeout runs out, the system returns to the default cycling state
+        Given a non-zero value that -does- change from read to read, more time will be added to the timeout value
+        If a non-zero scale measurement is not detected and the timeout runs out, the system returns to the idling animation.
         When the scale turns off to save power, the LEDs will stop cycling and button presses will no longer be registered until the scale is turned on again.  
         Upon a successful read and log-file write, a notification (to the given registered URL stored on the pi) will be sent to the user's phone or any subscribed device.
-        That notification will reflect the changing values of the staples over time and provide an estimate of the remaining days of stock and current gram amounts remaining.
+        The notification will reflect the changing values of the staples over time and provide an estimate of the remaining days of stock and current gram amounts remaining.
 
 Major moving pieces:
 
 Bill of materials, thoughts on material choices:
     --> a raspberry pi starter kit(LINK)
         a starter kit is really helpful. they put all the relevant stuff in one box so you don't have to go hunting down each piece. If not the whole starter kit, get yourself a case. 
-        A few times, I've made the mistake of touching the internals of the pi while it's running and it just shuts off. It's a robust little machine but it's not immortal. If the pi shuts down unexpectedly, it's probably not fried, let it think about its choices for several minutes (unconnected to anything) and things will probably work again. Double check your wiring and try again. It's easy to accidentally jump a GPIO pin to ground and prevent the Pi from starting at all.
-        I had a bad experience with the canakit default GPIO to breadboard adapter. Just try to talk to a few pins at once using the female to female jumper wires. Try not to hot-swap jumpers to the IO pins if you can help it.
+        A few times, I've made the mistake of touching the internals of the pi while it's running and it just shuts off. It's a robust little machine but it's not immortal. If the pi shuts down unexpectedly, it's probably not fried, let it sit unconnected for several minutes and things will probably work again. Double check your wiring and try again. It's easy to accidentally jump a GPIO pin to ground and prevent the Pi from starting at all.
+        I had a bad experience with the canakit default GPIO to breadboard adapter. Just try to talk to a few pins at once using the female to female jumper wires. Avoid hot-swapping jumpers to the IO pins.
     --> a 10 pack of lighted arcade buttons (LINK)
     a board from oshpark or the relevant components in breadboard or protoboard format
-        I thought I could just drive the switch LEDs from the GPIO pins. I was wrong. Strange hardware problems start happening if you're drawing too much current.
-        just save yourself the trouble and drive your LEDs with a transistor and draw off of the 5v rail.
-        It seems like a trivial difference. We can think, "Hey, it works! I'm good!" but it will cause you angst and woe further down the line. Save yourself the headache and drive the LEDs with transistors. Really.
-        Transistors aren't scary, you basically whisper (volume as amount of current) at the middle pin through a high value resistor (1-10k) and it allows the other two to shout at one another.
-    a bunch of jumper wires, male-to-male and female-to-female.
-    heatshrink tubing for every soldered connection (because it's nice to not short out everything)
+        When I was first assembling things, I thought I could drive the switch LEDs from the GPIO pins. I was wrong. Strange hardware problems start happening if you're drawing too much current.
+        just save yourself the trouble and drive your LEDs with a transistor and power everything off of the 5v rail.
+        This might seem like a trivial difference, it will even work without problems for a little while. We can think, "Hey, it works! I'm good!" but drawing too much current by trying to directly drive LEDs from GPIO pins will cause more problems than it's worth. Save yourself the headache and drive the LEDs with transistors. Really.
+        Transistors aren't scary, you basically whisper (imagining volume as amount of current) at the middle pin through a high value resistor (1-10k) and it allows the other two to shout at one another.
+    --> a pack of jumper wires, both male-to-male and female-to-female. Male to male are nice for breadboarding, female to male are nice for connecting with the GPIO pins.
+    --> heatshrink tubing for every soldered connection (because it's nice to not short out everything)
         heatshrink makes everything better.
     a decent soldering/heatshrink setup. I use:
         a temperature controlled hakko iron (best $80 I've ever spent.)
         a good roll of solder (don't huff solder fumes, kids)
-        a cheapo heatshrink kit off of ebay (LINK), I wish I had 2mm and smaller though for some connections.
+        a heatshrink kit off of ebay (LINK), I wish I had 2mm and smaller though for some connections.
         a decent hot air gun (LINK)
 
-burn raspbian to an SD card:
+SD CARD SETUP:
     download image of raspbian via torrent (https://www.raspberrypi.org/downloads/raspbian/)    
-    for the less metal, less hackerly minded, we can use a simple, easy to use tool like Etcher 
-        (TODO: LINK).
+    For a decidedly less scary approach, we can use a simple, easy to use tool like Etcher (http://www.balena.io/etcher/).
     if you're comfortable, we can also write the image directly to a disk using dd.
+    A warning: dd doesn't care about your data. Without the slightest hesitation, it will devour and replace your data with random noise.
+    Make VERY sure you're pointing at the right device before proceeding. Do NOT write to sda. sda is where the os lives. 
     follow a very thorough, well-written tutorial HERE:
         (https://www.raspberrypi.org/documentation/installation/installing-images/linux.md)
-    Make VERY sure you're pointing at the right device before proceeding.
-    dd doesn't care about your data. It will devour it, replace it with random noise and not even blink.
     The relevant device will only appear when your SD card is mounted.
-    Do NOT write to sda. sda is where the os lives. 
     dd will not display any output. There are other tools like pv that will help display your progress:
         (see this question: https://askubuntu.com/questions/215505/how-do-you-monitor-the-progress-of-dd
 
-OPTIONAL: get the pi working headlessly (because sometimes, like me when I wrote this, you don't have an HDMI-ready device):
+OPTIONAL: HEADLESS MODE:
+    How to set up your Pi to headlessly connect to your wifi network (because sometimes, like me when I wrote this, you don't have an HDMI-screen or even keyboard)
+    Things are a whole lot easier if we connect a screen and a keyboard.
+    By doing some of the setup with a screen and keyboard, we can avoid having to manually input your wifi network's ssid and password into a file.
+    Debugging and editing on the pi will be easier, there will be fewer slowdowns and you'll get immediate feedback when things aren't working.
     once we've burned the raspbian image to the SD card, take a look at it on another computer.
         navigate to the boot directory and initialize the file: 
             <code>cd /Volumes/boot; touch ssh</code>
     this allows the user to login over ssh. otherwise any attempts are blocked
-
-Things are a whole lot easier if we connect a screen and a keyboard.
-By doing some of the setup with a screen and keyboard, we can avoid having to manually input your wifi network's ssid and password into a file.
-Debugging and editing on the pi will be easier, there will be fewer slowdowns and you'll get immediate feedback when things aren't working.
     Add WPA supplicant config file to boot directory to automatically login to your local wifi (given SSID and password)
-        follow the steps here: https://www.raspberrypi.org/forums/viewtopic.php?t=191252
+    follow the steps here: https://www.raspberrypi.org/forums/viewtopic.php?t=191252
 
-set up pi with a comfortable environment
+ENVIRONMENT:
     make sure we change the default password to give ourselves some semblance of security:
         <code>passwd</code> and follow the onscreen prompts
     install relevant libraries: 
@@ -86,28 +83,42 @@ set up pi with a comfortable environment
         sudo apt-get install python-dev python3-rpi.gpio
         pip3 install notify-run
         </code>
-    and of course, install your favorite editor and get yourself some version control:  
+    And of course, install your favorite editor and get yourself some version control:  
         <code>sudo apt-get install vim git</code>
-    change the pi's default editor to your favorite one:    
+    change the pi's default text editor to your favorite one:    
         <code>sudo update-alternatives --config editor</code>
-    pull down a repository to edit locally  I find that the pi is sometimes sluggish to do lots of edits on quickly.
-    I'm not going to go into setting up a repository here, 
-    something like https://help.github.com/articles/adding-an-existing-project-to-github-using-the-command-line/ should do the trick
+    pull down a repository to edit locally  
+    Over an SSH connection, I find that the pi is sometimes sluggish to accept rapid inputs.
+    I like to open two terminals, one for vim and the other for a prompt.
+    Along side my editor, I'll open a python prompt. When prototyping some behavior, I can quickly trial-and-error my way to the correct syntax.
+
+THOUGHTS ON VERSION CONTROL:
+    You may find it's easier to do some deal of the trial and error (especially the stuff that doesn't involve the GPIO pins) locally on a fast, comfortable machine and then move things over when it works nicely.
+    Each time I switch between machines (laptop to pi, pi to laptop), I like to push my changes to github, (git commit -a, git push origin master) then immediately git pull origin master on the other machine.
+    There are easy ways of merging changes, this, though is an easy and predicable enough workflow for my purposes.
+    I'm not going to go into setting up a repository here, something like LINK:https://help.github.com/articles/adding-an-existing-project-to-github-using-the-command-line/ should do the trick
     change your name and email in git so that you can commit new changes to your repository:    
         <code>
         git config --global user.name "<your name>"
         git config --global user.email "<your email>
         </code>
     if you're creating a new project, initialize your repository from somewhere else (say, a laptop).
-    
+
+SCALE SETUP:
 acquire and setup a known usb scale (thoughts on getting and interpreting raw byte values)
-    put batteries into and plug in over USB your scale (Dymo M10 usb scale LINK)
-    The scale apparently also works without the batteries, but I think it's nice not to stress out the Pi too much and bring your own power.
+    put batteries into and plug in over USB your scale (LINK: Amazon: Dymo M10 usb scale)
+    The scale apparently also works without the batteries, but I think it's nice to not bring undue stress to the Pi and bring your own power.
     When you first try to talk to the scale, you'll probably get an error like this:
         <code>usb.core.USBError: [Errno 13] Access denied (insufficient permissions)</code>
-    use lsusb to see your connected devices: 
+    By default, we as a normal user can't go reading raw values from arbitrary devices.
+    to make it so we don't have to run all our commands under sudo or as root, do the following, then restart the pi:
+        make a new file (the extra number in the name is important):
+            sudo vim/etc/udev/rules.d/99-hidraw-permissions.rules
+        with the contents:
+            "KERNEL==""hidraw*"", SUBSYSTEM==""hidraw"", MODE=""0664"", GROUP=""plugdev"" 
+    Use lsusb to see your connected devices: 
     <code>lsusb | grep Dymo</code> (capitals matter!)   
-    To find the name of a device, I will sometimes find the diff between two temporary files:
+    To find the name of a device, I will sometimes use diff to find the difference between two temporary files:
         <code>
         ls /dev > /tmp/1
         remove the device
@@ -119,41 +130,10 @@ acquire and setup a known usb scale (thoughts on getting and interpreting raw by
     now that we know how long the message it sends over and over is, we can start doing interesting things with the output
     I've gone through some contortions to get the byte values into a usable format.
     <screenshot of read_scale byte manipulation>
-    by default we (as a normal user) can't just go reading raw values from arbitrary hardware.
-    to make it so we don't have to run everything under sudo or as root, do the following, then restart the pi:
-        make a new file (the extra number in the name is important):
-            sudo vim/etc/udev/rules.d/99-hidraw-permissions.rules
-        with the contents:
-            "KERNEL==""hidraw*"", SUBSYSTEM==""hidraw"", MODE=""0664"", GROUP=""plugdev""
 
-physical construction of interface (switches, LEDs, wiring, heatshrink)
-    For the interface, I bought a 10 pack of light-up arcade switches.
-    They come in a ridiculous, messy format. Don't be alarmed:
-    <picture of dissasembled switches> (gif switching between each state?)
-    <picture of several switches assembled and lined up>
-    The switches go together in a fairly straight forward way.
-    <picture of switch broken apart>
-    We need to swap out the resistors on each leg of the leds in the little plastic casings with new ones
-    I used a heavy piece of metal and some packing tape to hold the ends close together for ease of soldering.
-    (This is why third hand tools exist. They're great.)
-    <picture of LED soldering jig>
-    each requires a small modification to be used with the pi. The leds come pre-wired with a resistor relevant to power at 12v, we want something much lower
-    another way would be to unbend the legs and swap in LEDs without included resistors
-    this just means we need to place the current limiting resistors somewhere else in the circuit.
-    I've used 220ohm through-hole resistors but we could just have easily used 330.
-    For the transistor middle pin, I've used 2k but we could just have easily used anything from 1k to 10k.
-    this is easier and faster, it just requires that we have a few LEDs on hand already. If you bought a raspberry pi starter kit, there should be a few included.
-    <image of LED swapping>
-    for managing a whole tangle of wires and wiring together a circuit, I've found that the time I've spent learning to useKiCAD has been more than repaid in frustration saved when dealing with breadboards.
-    the one thing I will say is that it's easy with designing and fabricating circuit boards (made especially unpleasant by the 2+ week turnaround between trial and error) try your best to not fall prey to magical thinking.
-    I've made the same error maybe a half dozen times now where I assume that the pinout of one transistor will be the same as another. Really: use the footprint and schematic symbol for the component you're actually going to use.
-    Take a look at the finished circuit and trace out some of the paths: does the signal pin of the transistor correspond to the 10k resistor and the GPIO output pin? If not, you've messed up somewhere.
-    This us just my preference, you can just as easily fabricate the circuit on protoboard or plug it into a breadboard.
-    I have also placed the switches into a reversed cardboard box I had lying around. It's not exactly the perfect size but I was able to trace the locations for each switch onto the box, cut each hole with a sharp knife and tighten one half of the switch onto the box.
-    The nice thing about these switches is that they cleanly separate into the plastic body of the switch and the electronics (where all the soldering happens).
-
+PROTOTYPING I/O STUFF:
 interact with GPIO pins, both inputs and outputs.
-    One of the great things we gain by using python is the use of the interpreter.
+    By using python, we get to use the (wonderful) interpreter.
     from within a python prompt (use python 3 (python3 from the terminal), python2 will soon no longer be maintained) 
     import RPi.GPIO as GPIO
     from time import sleep
@@ -164,14 +144,36 @@ interact with GPIO pins, both inputs and outputs.
     When intially setting up the wiring, work up to the full complexity, say, getting one switch to display its output on the command line then, getting 2-5 switches displaying output.
     The pinout of the raspi can be a little confusing. I had to adjust my wiring a few times because I kept assuming a ground pin (PIN NUMBER?) was a usable GPIO pin.
 
-Prototyping with python, thoughts about version control:
-    You may find it's easier to do some deal of the trial and error (especially the stuff that doesn't involve the GPIO pins) locally on a fast, comfortable machine and then move thing over when it works nicely.
-    Each time I will switch between machines (laptop to pi, pi to laptop), 
-    I like to push my changes to github, (git commit -a, git push origin master)
-    then immediately git pull origin master on the other machine.
-    I get that there are ways of merging changes, I haven't fit that in my brain yet and this is an easy and predicable enough workflow for my purposes.
+ASSEMBLY:
+physical construction of interface (switches, LEDs, wiring, heatshrink)
+    For the interface, I bought a 10 pack of light-up arcade switches and used 5 of them. 
+    It would be easy enough to add more slots but 5 seemed like a reasonable number to start with.
+    They come in a ridiculous, messy format. Don't be alarmed:
+    <picture of dissasembled switches> (gif switching between each state?)
+    <picture of several switches assembled and lined up>
+    The switches go together in a fairly straight forward way.
+    <picture of switch broken apart>
+    As the LEDs are wired to expect 12v instead of 5v, we need to swap out the resistors on each leg of the leds in the little plastic casings with new ones
+    I used a heavy piece of metal and some packing tape to hold the ends close together for ease of soldering.
+    (This is why third hand tools exist. They're great.)
+    <picture of LED soldering jig>
+    another way would be to unbend the legs and swap in LEDs without included resistors
+    this just means we need to place the current limiting resistors somewhere else in the circuit.
+    I've used 220ohm through-hole resistors but we could just have easily used 330.
+    For the transistor middle pin, I've used 2k but we could just have easily used anything from 1k to 10k.
+    this is easier and faster, it just requires that we have a few LEDs on hand already. If you bought a raspberry pi starter kit, there should be a few included.
+    <image of LED swapping>
+    for managing a whole tangle of wires and wiring together a circuit, I've found that the time I've spent learning to useKiCAD has been more than repaid in frustration saved when dealing with breadboards.
+    the one thing I will say is that it's easy with designing and fabricating circuit boards (made especially unpleasant by the 2+ week turnaround between trial and error) try your best to not fall prey to magical thinking.
+    I've made the same error maybe a half dozen times now where I assume that the pinout of one transistor will be the same as another. Really: use the footprint and schematic symbol for the component you're actually going to use.
+    Take a look at the finished circuit and trace out some of the paths: does the signal pin of the transistor correspond to the 10k resistor and the GPIO output pin? If not, you've messed up somewhere.
+    You can just as easily fabricate the circuit on protoboard or plug it into a breadboard, this is just my preference.
+    On the board I ordered, I ended up not populating the whole thing. Because of internal pull down resistors (switched on during setup) we can use the input pins as is.
+    As a case, I've used the clean but unglamorous reversed cardboard box. Using a spacer ring (included with the switches), I was able to trace the locations for each switch onto the box. Then, with a sharp knife or hobby blade, cut each hole tighten one half of the switch onto the box.
+    The nice thing about these switches is that they cleanly separate into the plastic body of the switch and the electronics.
+    This makes it easy to do all of the soldering and heatshrink separately and attach the fully wired switches after the fact.
 
-notifications:
+NOTIFICATIONS:
     Use notify.run for push notifications
     <code>pip3 install notify-run</code>
     To get notifications working, you will have to manually step through the registration process 
