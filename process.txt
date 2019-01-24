@@ -83,17 +83,17 @@ ENVIRONMENT:
         sudo apt-get install python-dev python3-rpi.gpio
         pip3 install notify-run
         </code>
-    And of course, install your favorite editor and get yourself some version control:  
+    Install your favorite editor and get yourself some version control:  
         <code>sudo apt-get install vim git</code>
-    change the pi's default text editor to your favorite one:    
+    change the pi's default text editor to your one of choice:    
         <code>sudo update-alternatives --config editor</code>
-    pull down a repository to edit locally  
-    Over an SSH connection, I find that the pi is sometimes sluggish to accept rapid inputs.
-    I like to open two terminals, one for vim and the other for a prompt.
-    Along side my editor, I'll open a python prompt. When prototyping some behavior, I can quickly trial-and-error my way to the correct syntax.
+    Pull down a repository to edit locally  
+        <code>git clone https://github.com/aaevan/pantry-monitor</code>
 
 THOUGHTS ON VERSION CONTROL:
     You may find it's easier to do some deal of the trial and error (especially the stuff that doesn't involve the GPIO pins) locally on a fast, comfortable machine and then move things over when it works nicely.
+    Over an SSH connection, I find that the pi is sometimes sluggish to accept rapid inputs.
+    I like to open two terminals, one for vim and the other for a prompt.
     Each time I switch between machines (laptop to pi, pi to laptop), I like to push my changes to github, (git commit -a, git push origin master) then immediately git pull origin master on the other machine.
     There are easy ways of merging changes, this, though is an easy and predicable enough workflow for my purposes.
     I'm not going to go into setting up a repository here, something like LINK:https://help.github.com/articles/adding-an-existing-project-to-github-using-the-command-line/ should do the trick
@@ -127,25 +127,26 @@ acquire and setup a known usb scale (thoughts on getting and interpreting raw by
     The same can be used for lsusb or anything else that changes when you plug in or connect a device. 
     We can see the changing state of the scale over USB by looking at the raw values:   
         <code> cat /dev/hidraw0 | xxd -c 6</code> (displays the raw bytes output)
-    now that we know how long the message it sends over and over is, we can start doing interesting things with the output
+    Now that we know how long the message it sends over and over is, we can start doing interesting things with the output
     I've gone through some contortions to get the byte values into a usable format.
     <screenshot of read_scale byte manipulation>
 
 PROTOTYPING I/O STUFF:
 interact with GPIO pins, both inputs and outputs.
-    By using python, we get to use the (wonderful) interpreter.
-    from within a python prompt (use python 3 (python3 from the terminal), python2 will soon no longer be maintained) 
+    By using python, we get to use an interpreter. When prototyping some behavior, we can use trial and error to quickly find our way to the correct syntax.
+    from within a python prompt (use python 3 (python3 from the terminal), python2 will soon no longer be maintained):
+    <code>
     import RPi.GPIO as GPIO
     from time import sleep
+    </code>
     I initially played around with the gpio pins and simple layouts and simple functions.
     (just an LED, just a switch, two LEDs, an LED with a switch, two switches, two LEDs and two switches)
-    I recommend trying to get the simplest moving pieces working independently and then slowly start gluing them together into larger and larger pieces
-    if you try to tackle too much at once, you won't have a clear indication of what is going wrong.
-    When intially setting up the wiring, work up to the full complexity, say, getting one switch to display its output on the command line then, getting 2-5 switches displaying output.
-    The pinout of the raspi can be a little confusing. I had to adjust my wiring a few times because I kept assuming a ground pin (PIN NUMBER?) was a usable GPIO pin.
+    I recommend trying to get the simplest moving pieces working independently and then slowly start stitching them together into larger and more complex pieces
+    For instance, when intially setting up the wiring, incrementally work up to the full complexity, say, getting one switch to display its output on the command line then, getting 2-5 switches displaying output.
+    If you try to tackle too much at once, you won't have a clear indication of what is going wrong.
+    Note: The pinout of the raspi can be a little confusing. I had to adjust my wiring a few times because I kept assuming a ground pin was a usable GPIO pin.
 
 ASSEMBLY:
-physical construction of interface (switches, LEDs, wiring, heatshrink)
     For the interface, I bought a 10 pack of light-up arcade switches and used 5 of them. 
     It would be easy enough to add more slots but 5 seemed like a reasonable number to start with.
     They come in a ridiculous, messy format. Don't be alarmed:
@@ -153,6 +154,9 @@ physical construction of interface (switches, LEDs, wiring, heatshrink)
     <picture of several switches assembled and lined up>
     The switches go together in a fairly straight forward way.
     <picture of switch broken apart>
+    I've soldered halved female-female jumper wire to the common pin and the normally closed pin of each switch.
+    Cut each wire in half, strip about 1/4" off of the end, twist so that the strands don't come free and hook it through the hole in the spade connector. It should then be easy to solder each connection. Do the same for each LED contact.
+    <picture of fully soldered switch>
     As the LEDs are wired to expect 12v instead of 5v, we need to swap out the resistors on each leg of the leds in the little plastic casings with new ones
     I used a heavy piece of metal and some packing tape to hold the ends close together for ease of soldering.
     (This is why third hand tools exist. They're great.)
