@@ -167,8 +167,8 @@ ASSEMBLY:
     For the transistor middle pin, I've used 2k but we could just have easily used anything from 1k to 10k.
     this is easier and faster, it just requires that we have a few LEDs on hand already. If you bought a raspberry pi starter kit, there should be a few included.
     <image of LED swapping>
-    for managing a whole tangle of wires and wiring together a circuit, I've found that the time I've spent learning to useKiCAD has been more than repaid in frustration saved when dealing with breadboards.
-    the one thing I will say is that it's easy with designing and fabricating circuit boards (made especially unpleasant by the 2+ week turnaround between trial and error) try your best to not fall prey to magical thinking.
+    For managing a whole tangle of wires and wiring together a circuit, I've found that the time I've spent learning to useKiCAD has been more than repaid in frustration saved when dealing with breadboards.
+    The one thing I will say is that it's easy with designing and fabricating circuit boards (made especially unpleasant by the 2+ week turnaround between trial and error) try your best to not fall prey to magical thinking.
     I've made the same error maybe a half dozen times now where I assume that the pinout of one transistor will be the same as another. Really: use the footprint and schematic symbol for the component you're actually going to use.
     Take a look at the finished circuit and trace out some of the paths: does the signal pin of the transistor correspond to the 10k resistor and the GPIO output pin? If not, you've messed up somewhere.
     You can just as easily fabricate the circuit on protoboard or plug it into a breadboard, this is just my preference.
@@ -176,6 +176,7 @@ ASSEMBLY:
     As a case, I've used the clean but unglamorous reversed cardboard box. Using a spacer ring (included with the switches), I was able to trace the locations for each switch onto the box. Then, with a sharp knife or hobby blade, cut each hole tighten one half of the switch onto the box.
     The nice thing about these switches is that they cleanly separate into the plastic body of the switch and the electronics.
     This makes it easy to do all of the soldering and heatshrink separately and attach the fully wired switches after the fact.
+    Because of the placement in the box I chose, I had to stagger the last two switches s
 
 NOTIFICATIONS:
     Use notify.run for push notifications
