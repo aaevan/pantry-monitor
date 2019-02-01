@@ -176,7 +176,7 @@ ASSEMBLY:
     As a case, I've used the clean but unglamorous reversed cardboard box. Using a spacer ring (included with the switches), I was able to trace the locations for each switch onto the box. Then, with a sharp knife or hobby blade, cut each hole tighten one half of the switch onto the box.
     The nice thing about these switches is that they cleanly separate into the plastic body of the switch and the electronics.
     This makes it easy to do all of the soldering and heatshrink separately and attach the fully wired switches after the fact.
-    Because of the placement in the box I chose, I had to stagger the last two switches s
+    Because of the placement of the switches in the box I chose, I had to stagger the last two switches.
 
 NOTIFICATIONS:
     Use notify.run for push notifications
