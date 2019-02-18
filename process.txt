@@ -196,7 +196,7 @@ There's several moving pieces to this project:
     gpio_control.py: the top level script. Sets up the GPIO pins to activate different listening and output states. Imports read_scale and notify_script.
     staple_log.txt: a python dictionary in plaintext, one per line. Stores the keys and values of each staple quantity and the date that the record was made. This is turned back into something useful using ast.literal_eval().
 
-    <gif of idle animation>
+    <gif of idle animation> (see https://youtu.be/ahMDome1ZE8)
     make sure the python path is correct in the top line of gpio_control.py 
     <code>cd ~/; git clone https://github.com/aaevan/pantry-monitor</code>
     to the last line of your bashrc (sudo <editor> /home/pi/.bashrc), add the following:    
